@@ -1,0 +1,24 @@
+@model ErrorViewModel
+@{
+    ViewData["Title"] = "Error del sistema";
+}
+
+<div class="hud-panel p-5 text-center mt-4 mx-auto" style="max-width: 600px; border-color: var(--color-critical) !important;">
+    <div class="mb-3 d-flex justify-content-center">
+        <i data-lucide="alert-octagon" style="width: 56px; height: 56px; color: var(--color-critical); stroke-width: 1.8;"></i>
+    </div>
+    <h1 class="titulo-negocio h3 mb-2">Error en la solicitud</h1>
+    <p class="lead small" style="color: var(--text-primary);">Ha ocurrido un inconveniente al procesar la operación en el sistema.</p>
+
+    @if (Model.ShowRequestId)
+    {
+        <p class="small text-muted mb-4">
+            <span class="hud-mono">ID DE SOLICITUD:</span> <code class="hud-mono" style="color: var(--color-alert);">@Model.RequestId</code>
+        </p>
+    }
+
+    <a class="btn btn-hud-primary d-inline-flex align-items-center" asp-controller="Home" asp-action="Index">
+        <i data-lucide="home" class="me-2"></i>
+        <span>Volver al inicio</span>
+    </a>
+</div>

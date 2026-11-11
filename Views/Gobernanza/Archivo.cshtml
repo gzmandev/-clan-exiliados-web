@@ -1,0 +1,185 @@
+@model ClanExiliados_Web.Services.ClanInstitutionalService
+@{
+    ViewData["Title"] = "Archivo Institucional y Registro de Auditoría";
+    var pestana = (ViewData["PestanaActiva"]?.ToString() ?? "archivo").ToLowerInvariant();
+    var filtroTipo = ViewData["FiltroTipo"]?.ToString() ?? "";
+    var filtroDepartamento = ViewData["FiltroDepartamento"]?.ToString() ?? "";
+    var filtroUnidad = ViewData["FiltroUnidad"]?.ToString() ?? "";
+    var filtroQ = ViewData["FiltroQ"]?.ToString() ?? "";
+
+    var entradas = Model.Archivo.AsEnumerable();
+    if (!string.IsNullOrEmpty(filtroTipo))
+        entradas = entradas.Where(a => a.Tipo.Equals(filtroTipo, StringComparison.OrdinalIgnoreCase));
+    if (!string.IsNullOrEmpty(filtroDepartamento))
+        entradas = entradas.Where(a => a.Departamento.Equals(filtroDepartamento, StringComparison.OrdinalIgnoreCase));
+    if (!string.IsNullOrEmpty(filtroUnidad))
+        entradas = entradas.Where(a => a.Unidad.Equals(filtroUnidad, StringComparison.OrdinalIgnoreCase));
+    if (!string.IsNullOrEmpty(filtroQ))
+        entradas = entradas.Where(a =>
+            a.IntegranteCodigoCE.Contains(filtroQ, StringComparison.OrdinalIgnoreCase) ||
+            a.IntegranteAlias.Contains(filtroQ, StringComparison.OrdinalIgnoreCase) ||
+            a.Descripcion.Contains(filtroQ, StringComparison.OrdinalIgnoreCase));
+
+    var listaArchivo = entradas.OrderByDescending(a => a.Fecha).ToList();
+    var accesoAuditoria = Model.PerfilVisualActual == "Dirección" || Model.PerfilVisualActual == "Mando";
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div>
+        <div class="hud-kicker">MÓDULO 16 · TRAZABILIDAD HISTÓRICA (ARC-###) Y AUDITORÍA (AUD-###)</div>
+        <h2 class="hud-title mb-1">Archivo Institucional y Registro de Auditoría</h2>
+        <p class="text-secondary mb-0 small">
+            Consulta histórica general, individual, por unidad y departamental, junto a la bitácora de auditoría administrativa.
+        </p>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-action="Archivo" asp-route-pestana="archivo" class="btn btn-sm @(pestana == "archivo" ? "btn-hud-primary" : "btn-hud-outline")">
+            Archivo Institucional (@Model.Archivo.Count)
+        </a>
+        <a asp-action="Archivo" asp-route-pestana="auditoria" class="btn btn-sm @(pestana == "auditoria" ? "btn-hud-primary" : "btn-hud-outline")">
+            Registro de Auditoría (@Model.Auditoria.Count)
+        </a>
+    </div>
+</div>
+
+@if (pestana == "archivo")
+{
+    <!-- FILTROS DE CONSULTA (GENERAL, INDIVIDUAL, POR UNIDAD, DEPARTAMENTAL) -->
+    <form method="get" asp-action="Archivo" class="hud-panel p-3 mb-4">
+        <input type="hidden" name="pestana" value="archivo" />
+        <div class="row g-2 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label small hud-mono">CONSULTA INDIVIDUAL (CE / ALIAS)</label>
+                <input type="text" name="q" value="@filtroQ" class="form-control form-control-sm hud-input" placeholder="Ej. CE-001, Paquito..." />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small hud-mono">TIPO DE EVENTO</label>
+                <select name="tipo" class="form-select form-select-sm hud-input">
+                    <option value="">Todos</option>
+                    <option value="Incorporación" selected="@(filtroTipo == "Incorporación")">Incorporación</option>
+                    <option value="Ascenso" selected="@(filtroTipo == "Ascenso")">Ascenso</option>
+                    <option value="Reconocimiento" selected="@(filtroTipo == "Reconocimiento")">Reconocimiento</option>
+                    <option value="Disciplina" selected="@(filtroTipo == "Disciplina")">Disciplina</option>
+                    <option value="Decisión administrativa" selected="@(filtroTipo == "Decisión administrativa")">Decisión administrativa</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small hud-mono">CONSULTA DEPARTAMENTAL</label>
+                <select name="departamento" class="form-select form-select-sm hud-input">
+                    <option value="">Todos los departamentos</option>
+                    @foreach (var d in Model.Departamentos)
+                    {
+                        <option value="@d.Nombre" selected="@(filtroDepartamento == d.Nombre)">@d.Nombre</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small hud-mono">CONSULTA POR UNIDAD</label>
+                <select name="unidad" class="form-select form-select-sm hud-input">
+                    <option value="">Todas las unidades</option>
+                    @foreach (var u in Model.Unidades)
+                    {
+                        <option value="@u.Id" selected="@(filtroUnidad == u.Id)">@u.Id</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-2 d-flex gap-2">
+                <button type="submit" class="btn btn-hud-primary btn-sm flex-grow-1">Consultar</button>
+                <a asp-action="Archivo" asp-route-pestana="archivo" class="btn btn-hud-outline btn-sm">Limpiar</a>
+            </div>
+        </div>
+    </form>
+
+    <div class="hud-panel p-4">
+        <div class="table-responsive">
+            <table class="table hud-table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>FOLIO</th>
+                        <th>FECHA Y HORA</th>
+                        <th>TIPO</th>
+                        <th>EFECTIVO</th>
+                        <th>DEPTO. / UNIDAD</th>
+                        <th>DESCRIPCIÓN DEL ASIENTO</th>
+                        <th>AUTORIDAD</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var ar in listaArchivo)
+                    {
+                        <tr>
+                            <td class="hud-mono fw-bold text-success">@ar.Id</td>
+                            <td class="hud-mono small text-secondary">@ar.Fecha.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td><span class="hud-badge hud-badge-info">@ar.Tipo</span></td>
+                            <td class="hud-mono fw-bold text-light">@ar.IntegranteCodigoCE · @ar.IntegranteAlias</td>
+                            <td class="small">
+                                <span class="text-warning">@ar.Departamento</span> · <span class="hud-mono text-success">@ar.Unidad</span>
+                            </td>
+                            <td class="small text-light">@ar.Descripcion</td>
+                            <td class="small text-secondary">@ar.Autoridad</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+else
+{
+    @if (!accesoAuditoria)
+    {
+        <div class="hud-panel p-5 text-center" style="border: 1px solid rgba(239, 68, 68, 0.45);">
+            <div class="hud-mono text-danger fw-bold mb-2">TRAZABILIDAD DE AUDITORÍA RESTRINGIDA A DIRECCIÓN Y MANDO</div>
+            <p class="text-secondary mb-3">
+                El perfil activo (<strong>@Model.PerfilVisualActual</strong>) tiene acceso al Archivo Institucional pero no a la bitácora técnica de Auditoría (<span class="hud-mono">AUD-###</span>).
+            </p>
+            <form asp-controller="Home" asp-action="CambiarPerfil" method="post" class="d-inline">
+                <input type="hidden" name="perfil" value="Dirección" />
+                <input type="hidden" name="returnUrl" value="/Gobernanza/Archivo?pestana=auditoria" />
+                <button type="submit" class="btn btn-hud-primary">Cambiar a Perfil «Dirección»</button>
+            </form>
+        </div>
+    }
+    else
+    {
+        <div class="hud-panel p-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="hud-title mb-0">Registro de Auditoría de Operaciones Críticas (@Model.Auditoria.Count)</h5>
+                <span class="hud-badge hud-badge-success">ACCESO AUTORIZADO: @Model.PerfilVisualActual.ToUpperInvariant()</span>
+            </div>
+            <div class="table-responsive">
+                <table class="table hud-table align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>ID AUDITORÍA</th>
+                            <th>FECHA / HORA</th>
+                            <th>TIPO OPERACIÓN</th>
+                            <th>USUARIO EJECUTOR</th>
+                            <th>REGISTRO MODIFICADO</th>
+                            <th>VALOR ANTERIOR → VALOR NUEVO</th>
+                            <th>MOTIVO</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var aud in Model.Auditoria)
+                        {
+                            <tr>
+                                <td class="hud-mono fw-bold text-warning">@aud.Id</td>
+                                <td class="hud-mono small text-secondary">@aud.FechaHora.ToString("dd/MM/yyyy HH:mm")</td>
+                                <td><span class="hud-badge hud-badge-neutral">@aud.TipoOperacion</span></td>
+                                <td class="small text-light fw-bold">@aud.UsuarioEjecutor</td>
+                                <td class="hud-mono small text-info">@aud.RegistroModificado</td>
+                                <td class="small">
+                                    <span class="text-secondary">@aud.ValorAnterior</span>
+                                    <span class="text-warning mx-1">→</span>
+                                    <strong class="text-success">@aud.ValorNuevo</strong>
+                                </td>
+                                <td class="small text-secondary">@aud.Motivo</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+}

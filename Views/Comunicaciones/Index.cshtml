@@ -1,0 +1,149 @@
+@model ClanExiliados_Web.Services.ClanInstitutionalService
+@{
+    ViewData["Title"] = "Centro de Comunicaciones Institucionales";
+    var filtroPrioridad = ViewData["FiltroPrioridad"]?.ToString() ?? "";
+    var filtroEstado = ViewData["FiltroEstado"]?.ToString() ?? "";
+
+    var comunicados = Model.Comunicaciones.AsEnumerable();
+    if (!string.IsNullOrEmpty(filtroPrioridad))
+        comunicados = comunicados.Where(c => c.Prioridad.Equals(filtroPrioridad, StringComparison.OrdinalIgnoreCase));
+    if (!string.IsNullOrEmpty(filtroEstado))
+        comunicados = comunicados.Where(c => c.Estado.Equals(filtroEstado, StringComparison.OrdinalIgnoreCase));
+
+    var lista = comunicados.ToList();
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div>
+        <div class="hud-kicker">MÓDULO 17 · BOLETINES, DIRECTIVAS Y AVISOS DE MANDO (COM-###)</div>
+        <h2 class="hud-title mb-1">Comunicaciones Institucionales</h2>
+        <p class="text-secondary mb-0 small">
+            Publicación de órdenes operativas, circulares administrativas y avisos prioritarios dirigidos a toda la institución, departamentos o unidades.
+        </p>
+    </div>
+    <button type="button" class="btn btn-hud-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalPublicarComunicado">
+        + Emitir Comunicado Oficial (COM-###)
+    </button>
+</div>
+
+<!-- FILTROS -->
+<div class="hud-panel p-3 mb-4 d-flex flex-wrap justify-content-between align-items-center gap-2">
+    <div class="d-flex flex-wrap gap-2 align-items-center">
+        <span class="hud-mono small text-secondary me-2">PRIORIDAD:</span>
+        <a asp-action="Index" asp-route-prioridad="" asp-route-estado="@filtroEstado" class="btn btn-sm @(string.IsNullOrEmpty(filtroPrioridad) ? "btn-hud-primary" : "btn-hud-outline")">Todas</a>
+        <a asp-action="Index" asp-route-prioridad="Urgente" asp-route-estado="@filtroEstado" class="btn btn-sm @(filtroPrioridad == "Urgente" ? "btn-hud-primary" : "btn-hud-outline")">Urgente</a>
+        <a asp-action="Index" asp-route-prioridad="Importante" asp-route-estado="@filtroEstado" class="btn btn-sm @(filtroPrioridad == "Importante" ? "btn-hud-primary" : "btn-hud-outline")">Importante</a>
+        <a asp-action="Index" asp-route-prioridad="Informativo" asp-route-estado="@filtroEstado" class="btn btn-sm @(filtroPrioridad == "Informativo" ? "btn-hud-primary" : "btn-hud-outline")">Informativo</a>
+    </div>
+    <div class="d-flex flex-wrap gap-2 align-items-center">
+        <span class="hud-mono small text-secondary me-2">ESTADO:</span>
+        <a asp-action="Index" asp-route-prioridad="@filtroPrioridad" asp-route-estado="" class="btn btn-sm @(string.IsNullOrEmpty(filtroEstado) ? "btn-hud-primary" : "btn-hud-outline")">Todos</a>
+        <a asp-action="Index" asp-route-prioridad="@filtroPrioridad" asp-route-estado="Publicado" class="btn btn-sm @(filtroEstado == "Publicado" ? "btn-hud-primary" : "btn-hud-outline")">Publicados</a>
+        <a asp-action="Index" asp-route-prioridad="@filtroPrioridad" asp-route-estado="Borrador" class="btn btn-sm @(filtroEstado == "Borrador" ? "btn-hud-primary" : "btn-hud-outline")">Borradores</a>
+    </div>
+</div>
+
+<!-- LISTA DE COMUNICADOS -->
+<div class="row g-3">
+    @foreach (var c in lista)
+    {
+        var badgePrio = c.Prioridad switch
+        {
+            "Urgente" => "hud-badge-danger",
+            "Importante" => "hud-badge-warning",
+            _ => "hud-badge-info"
+        };
+        <div class="col-12">
+            <div class="hud-panel p-4">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="hud-mono fw-bold text-success">@c.Id</span>
+                        <span class="hud-badge @badgePrio">@c.Prioridad.ToUpperInvariant()</span>
+                        <span class="hud-badge hud-badge-neutral">@c.Categoria</span>
+                        <span class="hud-badge @(c.Estado == "Publicado" ? "hud-badge-success" : "hud-badge-warning")">@c.Estado</span>
+                    </div>
+                    <span class="hud-mono small text-secondary">@c.FechaHora.ToString("dd/MM/yyyy HH:mm")</span>
+                </div>
+
+                <h4 class="hud-title text-light mb-2">@c.Titulo</h4>
+                <p class="text-secondary small mb-3">@c.Contenido</p>
+
+                <div class="d-flex flex-wrap justify-content-between align-items-center pt-2 border-top border-secondary small">
+                    <div>
+                        <span class="text-secondary">Autor:</span> <strong class="text-light">@c.Autor</strong>
+                        <span class="text-secondary ms-3">Departamento:</span> <strong class="text-warning">@c.Departamento</strong>
+                        <span class="text-secondary ms-3">Destinatarios:</span> <strong class="text-info">@c.Destinatarios</strong>
+                    </div>
+                    <span class="hud-mono" style="color: @(c.LeidoDemostrativo ? "var(--color-primary)" : "var(--color-alert)");">
+                        @(c.LeidoDemostrativo ? "[CONFIRMADO] Lectura registrada" : "[PENDIENTE] Lectura pendiente de confirmación")
+                    </span>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- MODAL PUBLICAR COMUNICADO -->
+<div class="modal fade" id="modalPublicarComunicado" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content hud-modal">
+            <form asp-action="Publicar" method="post">
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title hud-title">Emitir Comunicado Institucional</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-8">
+                            <label class="form-label small hud-mono">TÍTULO DEL COMUNICADO *</label>
+                            <input type="text" name="titulo" class="form-control hud-input" placeholder="Ej. Directiva de Sincronización de Radio Frecuencia" required />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small hud-mono">PRIORIDAD</label>
+                            <select name="prioridad" class="form-select hud-input">
+                                <option value="Informativo">Informativo</option>
+                                <option value="Importante" selected>Importante</option>
+                                <option value="Urgente">Urgente</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small hud-mono">CATEGORÍA</label>
+                            <select name="categoria" class="form-select hud-input">
+                                <option value="Operaciones">Operaciones</option>
+                                <option value="Comando">Comando</option>
+                                <option value="Reclutamiento">Reclutamiento</option>
+                                <option value="Entrenamientos">Entrenamientos</option>
+                                <option value="Logística">Logística</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small hud-mono">DEPARTAMENTO EMISOR</label>
+                            <select name="departamento" class="form-select hud-input">
+                                @foreach (var d in Model.Departamentos)
+                                {
+                                    <option value="@d.Nombre">@d.Nombre</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small hud-mono">DESTINATARIOS</label>
+                            <select name="destinatarios" class="form-select hud-input">
+                                <option value="Toda la institución">Toda la institución</option>
+                                <option value="Departamentos de Comando y Operaciones">Departamentos de Comando y Operaciones</option>
+                                <option value="Unidades Tácticas UE-001 a UE-005">Unidades Tácticas UE-001 a UE-005</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small hud-mono">CONTENIDO DEL COMUNICADO *</label>
+                            <textarea name="contenido" rows="3" class="form-control hud-input" placeholder="Redacte el cuerpo del comunicado oficial..." required></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-hud-outline btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-hud-primary btn-sm">Publicar y Notificar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

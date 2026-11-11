@@ -1,0 +1,130 @@
+@model ClanExiliados_Web.Services.ClanInstitutionalService
+@{
+    ViewData["Title"] = "Escalafón Oficial de Rangos";
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div>
+        <div class="hud-kicker">MÓDULO 07.1 · JERARQUÍA INSTITUCIONAL DE 8 NIVELES</div>
+        <h2 class="hud-title mb-1">Escalafón Oficial de Rangos de Clan Exiliados</h2>
+        <p class="text-secondary mb-0 small">
+            Estructura jerárquica exclusiva de Clan Exiliados. Ningún rango proveniente de servidores externos se homologa automáticamente; todo ascenso se rige por mérito y evaluación interna.
+        </p>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-action="Organigrama" class="btn btn-hud-outline btn-sm">Ver Organigrama Interactivo</a>
+        <a asp-controller="Gobernanza" asp-action="Ascensos" class="btn btn-hud-primary btn-sm">Módulo de Ascensos</a>
+    </div>
+</div>
+
+<div class="row g-3">
+    @foreach (var r in Model.Rangos.OrderBy(x => x.Orden))
+    {
+        var efectivosRango = Model.Integrantes.Where(i => i.Rango.Equals(r.Nombre, StringComparison.OrdinalIgnoreCase)).ToList();
+        <div class="col-xl-6">
+            <div class="hud-panel p-4 h-100">
+                <div class="d-flex align-items-start gap-3">
+                    <!-- EMBLEMA SVG EXCLUSIVO POR RANGO -->
+                    <div class="d-flex align-items-center justify-content-center rounded flex-shrink-0"
+                         style="width: 68px; height: 68px; background: rgba(16,23,20,0.9); border: 1px solid rgba(197,160,89,0.45);">
+                        <svg width="44" height="44" viewBox="0 0 48 48" fill="none" aria-label="Insignia @r.Nombre">
+                            <polygon points="24,3 43,12 43,32 24,45 5,32 5,12" stroke="#C5A059" stroke-width="1.6" fill="rgba(34,139,34,0.16)" />
+                            @if (r.Orden == 1)
+                            {
+                                <circle cx="24" cy="18" r="4" fill="#C5A059" />
+                                <circle cx="16" cy="27" r="3.5" fill="#4ADE80" />
+                                <circle cx="32" cy="27" r="3.5" fill="#4ADE80" />
+                            }
+                            else if (r.Orden == 2)
+                            {
+                                <circle cx="18" cy="24" r="4" fill="#C5A059" />
+                                <circle cx="30" cy="24" r="4" fill="#C5A059" />
+                            }
+                            else if (r.Orden == 3)
+                            {
+                                <rect x="13" y="15" width="22" height="3.5" fill="#C5A059" />
+                                <rect x="13" y="22" width="22" height="3.5" fill="#C5A059" />
+                                <rect x="13" y="29" width="22" height="3.5" fill="#C5A059" />
+                            }
+                            else if (r.Orden == 4)
+                            {
+                                <rect x="13" y="18" width="22" height="4" fill="#C5A059" />
+                                <rect x="13" y="26" width="22" height="4" fill="#C5A059" />
+                            }
+                            else if (r.Orden == 5)
+                            {
+                                <path d="M13 28L24 19L35 28" stroke="#4ADE80" stroke-width="2.5" />
+                                <path d="M13 22L24 13L35 22" stroke="#4ADE80" stroke-width="2.5" />
+                                <path d="M13 34L24 25L35 34" stroke="#4ADE80" stroke-width="2.5" />
+                            }
+                            else if (r.Orden == 6)
+                            {
+                                <path d="M13 25L24 16L35 25" stroke="#4ADE80" stroke-width="2.5" />
+                                <path d="M13 32L24 23L35 32" stroke="#4ADE80" stroke-width="2.5" />
+                            }
+                            else if (r.Orden == 7)
+                            {
+                                <path d="M13 28L24 18L35 28" stroke="#4ADE80" stroke-width="2.5" />
+                                <circle cx="24" cy="31" r="2.5" fill="#C5A059" />
+                            }
+                            else
+                            {
+                                <circle cx="24" cy="24" r="5" stroke="#8B949E" stroke-width="2" />
+                            }
+                        </svg>
+                    </div>
+
+                    <div class="flex-grow-1">
+                        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-1">
+                            <span class="hud-mono small text-warning">@r.Codigo · ORDEN #@r.Orden</span>
+                            <span class="hud-badge hud-badge-success">@efectivosRango.Count EFECTIVO(S)</span>
+                        </div>
+                        <h4 class="hud-title mb-1 text-light">@r.Nombre</h4>
+                        <div class="small hud-mono text-info mb-2">@r.NivelJerarquico</div>
+                        <p class="small text-secondary mb-3">@r.Descripcion</p>
+
+                        <div class="row g-2 small mb-3">
+                            <div class="col-md-6">
+                                <div class="hud-mono text-secondary mb-1">RESPONSABILIDADES</div>
+                                <ul class="ps-3 mb-0 text-light">
+                                    @foreach (var resp in r.Responsabilidades)
+                                    {
+                                        <li>@resp</li>
+                                    }
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="hud-mono text-secondary mb-1">FACULTADES</div>
+                                <ul class="ps-3 mb-0 text-light">
+                                    @foreach (var fac in r.Facultades)
+                                    {
+                                        <li>@fac</li>
+                                    }
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="d-flex flex-wrap justify-content-between align-items-center pt-2 border-top border-secondary small">
+                            <span class="text-secondary">Superior: <strong class="text-light">@r.RangoSuperior</strong></span>
+                            <span class="text-secondary">Inferior: <strong class="text-light">@r.RangoInferior</strong></span>
+                        </div>
+
+                        @if (efectivosRango.Any())
+                        {
+                            <div class="mt-2 pt-2 border-top border-secondary d-flex flex-wrap gap-1">
+                                @foreach (var ef in efectivosRango)
+                                {
+                                    <a asp-controller="Personal" asp-action="Expediente" asp-route-id="@ef.CodigoCE"
+                                       class="badge text-decoration-none"
+                                       style="background: rgba(34,139,34,0.18); color: #4ADE80; border: 1px solid rgba(74,222,128,0.3);">
+                                        @ef.CodigoCE · @ef.Alias
+                                    </a>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>

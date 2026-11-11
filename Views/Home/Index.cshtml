@@ -1,0 +1,180 @@
+@model ClanInstitutionalService
+@{
+    ViewData["Title"] = "Inicio — Panel Institucional";
+    var perfil = Model.PerfilVisualActual;
+    var activos = Model.Integrantes.Count(i => i.EstadoInstitucional == "Activo");
+    var enReserva = Model.Integrantes.Count(i => i.EstadoInstitucional == "En reserva");
+    var conectados = Model.Integrantes.Count(i => i.Disponibilidad == "Disponible" || i.Disponibilidad == "Ocupado");
+    var solPendientes = Model.SolicitudesReclutamiento.Count(s => !s.Incorporado && s.EstadoAdmision != "Rechazada");
+
+    // RETO OPCIONAL: Arreglo de facciones oficiales y plataformas para @foreach
+    string[] faccionesOficiales = { "Militares", "Mercenarios", "Terroristas" };
+    string[] plataformasOficiales = { "Arma 3", "Arma Reforger", "GTA V / FiveM" };
+}
+
+<!-- BIENVENIDA INSTITUCIONAL -->
+<div class="hero-militar p-4 rounded-3 mb-4">
+    <div class="row align-items-center g-3">
+        <div class="col-12 col-lg-8">
+            <div class="d-inline-flex align-items-center badge-operativo mb-2 px-3 py-1 rounded-pill">
+                <i data-lucide="shield" class="me-2 icon-sm"></i> PLATAFORMA INSTITUCIONAL · PERFIL: @perfil.ToUpper()
+            </div>
+            <h1 class="titulo-negocio display-6 mb-1">CLAN EXILIADOS</h1>
+            <h2 class="h5 subtitulo-sistema text-uppercase mb-2 text-muted">Sistema de Admisión y Gestión Táctica</h2>
+            <p class="mb-3 text-light">
+                Bienvenido a la plataforma oficial de <strong>Clan Exiliados</strong>. Desde este panel principal puede acceder al mantenimiento de solicitudes de admisión, registro de nuevos postulantes, consultas por periodo y facciones oficiales.
+            </p>
+
+            @* Reto Razor: Directiva condicional segun la hora del servidor *@
+            @if (DateTime.Now.Hour < 8 || DateTime.Now.Hour >= 22)
+            {
+                <div class="estado-horario horario-nocturno d-inline-block px-3 py-2 rounded">
+                    <i data-lucide="moon" class="me-1 icon-sm text-warning"></i>
+                    <strong>Turno de Guardia Nocturna (@DateTime.Now.ToString("HH:mm") hrs):</strong> La plataforma se encuentra en horario nocturno. Las solicitudes registradas serán procesadas en el siguiente turno operativo.
+                </div>
+            }
+            else
+            {
+                <div class="estado-horario horario-activo d-inline-block px-3 py-2 rounded">
+                    <i data-lucide="sun" class="me-1 icon-sm text-primary"></i>
+                    <strong>Centro Operativo Activo (@DateTime.Now.ToString("HH:mm") hrs):</strong> La comandancia se encuentra en horario operativo evaluando expedientes y solicitudes de ingreso.
+                </div>
+            }
+        </div>
+
+        <div class="col-12 col-lg-4">
+            <div class="hud-panel p-3">
+                <div class="d-flex justify-content-between align-items-center mb-2 border-bottom border-secondary pb-2">
+                    <div class="d-flex align-items-center gap-2">
+                        <i data-lucide="user-check" class="text-primary icon-sm"></i>
+                        <span class="hud-mono small text-uppercase text-light fw-bold">Perfil: @perfil</span>
+                    </div>
+                    <span class="hud-badge hud-badge-success">En línea</span>
+                </div>
+                <p class="small text-secondary mb-3">
+                    Cambie de perfil para verificar los diferentes niveles de acceso y visualización de la plataforma.
+                </p>
+                <div class="d-flex flex-wrap gap-1">
+                    @foreach (var p in new[] { "Dirección", "Mando", "Responsables", "Integrantes" })
+                    {
+                        <form asp-controller="Home" asp-action="CambiarPerfil" method="post" class="m-0">
+                            <input type="hidden" name="perfil" value="@p" />
+                            <input type="hidden" name="returnUrl" value="/" />
+                            <button type="submit" class="btn btn-sm @(perfil == p ? "btn-hud-primary" : "btn-hud-outline") py-1 px-2">@p</button>
+                        </form>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CUATRO SECCIONES PRINCIPALES DEL SISTEMA -->
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div class="d-flex align-items-center gap-2">
+        <i data-lucide="layers" class="text-primary icon-md"></i>
+        <h3 class="h5 titulo-negocio mb-0">Módulos Principales de Admisión</h3>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-12 col-md-6 col-lg-3">
+        <a class="caja caja-verde-militar" asp-controller="Solicitudes" asp-action="Index">
+            <div class="caja-icono">
+                <i data-lucide="clipboard-list"></i>
+            </div>
+            <h5>Solicitudes</h5>
+            <p>Mantenimiento de solicitudes: búsqueda por Jugador/Discord, consulta de tabla y administración de registros.</p>
+            <span class="caja-accion">Abrir listado &rarr;</span>
+        </a>
+    </div>
+    <div class="col-12 col-md-6 col-lg-3">
+        <a class="caja caja-bosque" asp-controller="Solicitudes" asp-action="Nuevo">
+            <div class="caja-icono">
+                <i data-lucide="user-plus"></i>
+            </div>
+            <h5>Nueva solicitud</h5>
+            <p>Formulario de admisión: registro de postulante con rango deseado, especialidad, horas MILSIM y facción.</p>
+            <span class="caja-accion">Abrir formulario &rarr;</span>
+        </a>
+    </div>
+    <div class="col-12 col-md-6 col-lg-3">
+        <a class="caja caja-tactica" asp-controller="Consultas" asp-action="Periodo">
+            <div class="caja-icono">
+                <i data-lucide="calendar-search"></i>
+            </div>
+            <h5>Solicitudes por periodo</h5>
+            <p>Consulta filtrada: búsqueda entre fechas Desde/Hasta y facción con tabla detallada de resultados.</p>
+            <span class="caja-accion">Consultar periodo &rarr;</span>
+        </a>
+    </div>
+    <div class="col-12 col-md-6 col-lg-3">
+        <a class="caja caja-gris-oscuro" asp-controller="Estructura" asp-action="Facciones">
+            <div class="caja-icono">
+                <i data-lucide="flag"></i>
+            </div>
+            <h5>Facciones oficiales</h5>
+            <p>Presentación de las tres facciones oficiales de Clan Exiliados: Militares, Mercenarios y Terroristas.</p>
+            <span class="caja-accion">Ver facciones &rarr;</span>
+        </a>
+    </div>
+</div>
+
+<!-- RESUMEN EN TIEMPO REAL -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="hud-panel p-3 h-100">
+            <div class="hud-mono small text-muted">TOTAL INTEGRANTES</div>
+            <div class="display-6 fw-bold hud-mono text-light">@Model.Integrantes.Count</div>
+            <div class="small text-secondary hud-mono">@activos activos · @enReserva en reserva</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="hud-panel p-3 h-100">
+            <div class="hud-mono small text-muted">DISPONIBILIDAD</div>
+            <div class="display-6 fw-bold hud-mono text-primary">@conectados</div>
+            <div class="small text-secondary hud-mono">Operadores en servicio</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="hud-panel p-3 h-100">
+            <div class="hud-mono small text-muted">SOLICITUDES PENDIENTES</div>
+            <div class="display-6 fw-bold hud-mono text-warning">@solPendientes</div>
+            <div class="small text-secondary hud-mono">En proceso de revisión</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="hud-panel p-3 h-100">
+            <div class="hud-mono small text-muted">OPERACIONES REGISTRADAS</div>
+            <div class="display-6 fw-bold hud-mono text-info">@Model.Operaciones.Count</div>
+            <div class="small text-secondary hud-mono">Despliegues en plataforma</div>
+        </div>
+    </div>
+</div>
+
+@* Reto Razor: Iteracion foreach para Facciones Oficiales y Plataformas *@
+<div class="hud-panel p-4 text-center">
+    <div class="hud-mono small text-muted text-uppercase mb-2">Facciones Oficiales del Clan:</div>
+    <div class="d-flex justify-content-center flex-wrap gap-3 mb-3">
+        @foreach (string faccion in faccionesOficiales)
+        {
+            var badgeClass = faccion == "Militares" ? "badge-militares" : (faccion == "Mercenarios" ? "badge-mercenarios" : "badge-terroristas");
+            var iconName = faccion == "Militares" ? "shield" : (faccion == "Mercenarios" ? "crosshair" : "flame");
+            var count = Model.Integrantes.Count(i => i.Faccion == faccion);
+            <a asp-controller="Estructura" asp-action="Facciones" class="btn btn-sm btn-hud-outline py-2 px-3 d-inline-flex align-items-center gap-2">
+                <i data-lucide="@iconName" class="icon-sm text-primary"></i>
+                <span class="hud-title text-light">@faccion</span>
+                <span class="hud-badge @badgeClass hud-mono">@count efectivos</span>
+            </a>
+        }
+    </div>
+    <div class="hud-mono small text-muted text-uppercase mb-2">Plataformas Tácticas Soportadas:</div>
+    <div class="d-flex justify-content-center flex-wrap gap-2">
+        @foreach (string plat in plataformasOficiales)
+        {
+            <span class="hud-badge hud-badge-neutral px-3 py-1">
+                <i data-lucide="monitor" class="icon-sm me-1 text-primary"></i> @plat
+            </span>
+        }
+    </div>
+</div>

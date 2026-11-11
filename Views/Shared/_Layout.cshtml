@@ -1,0 +1,465 @@
+@inject ClanInstitutionalService ClanService
+@{
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString() ?? "Home";
+    var currentAction = ViewContext.RouteData.Values["action"]?.ToString() ?? "Index";
+    var perfilActual = ClanService.PerfilVisualActual;
+    var notifNoLeidas = ClanService.Notificaciones.Count(n => !n.Leida);
+    var alertasActivas = ClanService.Alertas.Where(a => !a.Atendida).ToList();
+    var conectados = ClanService.Integrantes.Count(i => i.Disponibilidad == "Disponible" || i.Disponibilidad == "Ocupado");
+}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Clan Exiliados</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+    <div class="hud-layout-container">
+        <!-- ==================================================================
+             SIDEBAR IZQUIERDA (TACTICAL ADMINISTRATIVE INTERFACE - 7 CATEGORÍAS)
+             ================================================================== -->
+        <aside class="hud-sidebar" id="hudSidebar">
+            <div class="hud-sidebar-brand d-flex align-items-center justify-content-between">
+                <a class="d-flex align-items-center gap-2 text-decoration-none text-white" asp-controller="Home" asp-action="Index">
+                    <div class="ce-shield-badge" title="Escudo Institucional Clan Exiliados">
+                        <i data-lucide="shield" class="icon-lg"></i>
+                    </div>
+                    <div class="sidebar-header-text">
+                        <div class="hud-title fs-5 lh-1 text-light">CLAN EXILIADOS</div>
+                        <small class="hud-mono text-muted" style="font-size: 0.7rem;">MILSIM &amp; RP PLATFORM</small>
+                    </div>
+                </a>
+                <div class="d-flex align-items-center gap-1">
+                    <button class="btn btn-sm btn-hud-outline py-1 px-2 d-none d-lg-inline-flex" type="button" onclick="toggleSidebar();" title="Expandir/Contraer menú">
+                        <i data-lucide="chevrons-left" class="icon-sm"></i>
+                    </button>
+                    <button class="btn btn-sm btn-hud-outline py-1 px-2 d-lg-none" type="button" onclick="toggleSidebarMovil();">
+                        <i data-lucide="x" class="icon-sm"></i>
+                    </button>
+                </div>
+            </div>
+
+            <nav class="hud-sidebar-nav" aria-label="Navegación institucional">
+                <!-- CATEGORÍA 1: SISTEMA DE ADMISIÓN -->
+                <div class="hud-nav-category">Sistema de Admisión</div>
+                <a class="hud-nav-link @(currentController == "Home" && currentAction == "Index" ? "active" : "")"
+                   asp-controller="Home" asp-action="Index">
+                    <i data-lucide="layout-dashboard"></i> <span class="sidebar-text">Inicio</span>
+                </a>
+                <a class="hud-nav-link @(currentController == "Solicitudes" && currentAction == "Index" ? "active" : "")"
+                   asp-controller="Solicitudes" asp-action="Index">
+                    <i data-lucide="clipboard-list"></i> <span class="sidebar-text">Solicitudes de ingreso</span>
+                </a>
+                <a class="hud-nav-link @(currentController == "Solicitudes" && currentAction == "Nuevo" ? "active" : "")"
+                   asp-controller="Solicitudes" asp-action="Nuevo">
+                    <i data-lucide="user-plus"></i> <span class="sidebar-text">Nueva solicitud</span>
+                </a>
+                <a class="hud-nav-link @(currentController == "Consultas" && currentAction == "Periodo" ? "active" : "")"
+                   asp-controller="Consultas" asp-action="Periodo">
+                    <i data-lucide="calendar-range"></i> <span class="sidebar-text">Consultas por periodo</span>
+                </a>
+                <a class="hud-nav-link @(currentController == "Estructura" && currentAction == "Facciones" ? "active" : "")"
+                   asp-controller="Estructura" asp-action="Facciones">
+                    <i data-lucide="flag"></i> <span class="sidebar-text">Facciones oficiales</span>
+                </a>
+
+                <!-- CATEGORÍA 2: GESTIÓN INSTITUCIONAL -->
+                <div class="hud-nav-category">Gestión Institucional</div>
+                <a class="hud-nav-link @(currentController == "Personal" && currentAction == "Index" ? "active" : "")"
+                   asp-controller="Personal" asp-action="Index">
+                    <i data-lucide="users"></i> <span class="sidebar-text">Integrantes</span>
+                </a>
+                <a class="hud-nav-link @(currentController == "Estructura" && (currentAction == "Departamentos" || currentAction == "Unidades") ? "active" : "")"
+                   asp-controller="Estructura" asp-action="Departamentos">
+                    <i data-lucide="building-2"></i> <span class="sidebar-text">Organización</span>
+                </a>
+                <a class="hud-nav-link @(currentController == "Operaciones" ? "active" : "")"
+                   asp-controller="Operaciones" asp-action="Index">
+                    <i data-lucide="crosshair"></i> <span class="sidebar-text">Operaciones</span>
+                </a>
+                <a class="hud-nav-link @(currentController == "Analitica" ? "active" : "")"
+                   asp-controller="Analitica" asp-action="Index">
+                    <i data-lucide="bar-chart-3"></i> <span class="sidebar-text">Reportes y analítica</span>
+                </a>
+                <a class="hud-nav-link @(currentController == "Home" && currentAction == "AcercaDe" ? "active" : "")"
+                   asp-controller="Home" asp-action="AcercaDe">
+                    <i data-lucide="info"></i> <span class="sidebar-text">Acerca de</span>
+                </a>
+            </nav>
+
+            <div class="p-3 border-top border-secondary">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <div class="sidebar-text">
+                        <div class="hud-mono small fw-bold text-light">CE-015 · Kodiak</div>
+                        <div class="hud-mono text-muted" style="font-size: 0.72rem;">Perfil: <span class="text-primary">@perfilActual</span></div>
+                    </div>
+                    <a class="btn btn-sm btn-hud-outline py-0 px-2 hud-mono" asp-controller="Personal" asp-action="Expediente" asp-route-id="CE-015" title="Ver mi ficha">Ficha</a>
+                </div>
+                <button type="button" class="btn btn-sm btn-tactical-danger w-100 justify-content-center" onclick="return confirmarSalidaSistema(event);">
+                    <i data-lucide="log-out" class="icon-sm"></i> <span class="sidebar-text">Cerrar sesión</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- ==================================================================
+             COLUMNA PRINCIPAL DE CONTENIDO
+             ================================================================== -->
+        <div class="flex-grow-1 d-flex flex-column" style="min-width: 0;">
+            <!-- MENÚ SUPERIOR OBLIGATORIO PA2 / PA3 (MenuStrip MDI) -->
+            <nav class="navbar navbar-expand-lg navbar-dark barra-menu px-3">
+                <div class="container-fluid px-0">
+                    <div class="d-flex align-items-center gap-2">
+                        <button class="btn btn-sm btn-hud-outline d-lg-none py-1 px-2" type="button" onclick="toggleSidebarMovil();" aria-label="Menú lateral">
+                            <i data-lucide="menu"></i>
+                        </button>
+                        <a class="navbar-brand d-flex align-items-center gap-2 fw-bold mb-0 py-0" asp-controller="Home" asp-action="Index">
+                            <span class="hud-title text-light fs-5">CLAN EXILIADOS</span>
+                            <span class="hud-mono text-muted small d-none d-xl-inline">· Sistema de Admisión Militar y Plataforma Institucional</span>
+                        </a>
+                    </div>
+
+                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menuPrincipalPA2"
+                            aria-controls="menuPrincipalPA2" aria-expanded="false" aria-label="Mostrar el menú">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+
+                    <div class="navbar-collapse collapse" id="menuPrincipalPA2">
+                        <!-- MENÚ MDI ORIGINAL PA2 EN EL _LAYOUT (PARTE B — 6 PUNTOS) -->
+                        <ul class="navbar-nav me-auto ms-lg-3 gap-lg-1">
+                            <li class="nav-item">
+                                <a class="nav-link @(currentController == "Home" && currentAction == "Index" ? "active" : "")"
+                                   asp-controller="Home" asp-action="Index">Inicio</a>
+                            </li>
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Archivo
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li>
+                                        <a class="dropdown-item" asp-controller="Home" asp-action="Index" onclick="return confirmarSalidaSistema(event);">
+                                            Salir
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle @(currentController == "Solicitudes" ? "active" : "")"
+                                   href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Mantenimiento
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li>
+                                        <a class="dropdown-item @(currentController == "Solicitudes" && currentAction == "Index" ? "active" : "")"
+                                           asp-controller="Solicitudes" asp-action="Index">Solicitudes</a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item @(currentController == "Solicitudes" && currentAction == "Nuevo" ? "active" : "")"
+                                           asp-controller="Solicitudes" asp-action="Nuevo">Nueva solicitud</a>
+                                    </li>
+                                </ul>
+                            </li>
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle @(currentController == "Consultas" ? "active" : "")"
+                                   href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Consultas
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li>
+                                        <a class="dropdown-item @(currentController == "Consultas" && currentAction == "Periodo" ? "active" : "")"
+                                           asp-controller="Consultas" asp-action="Periodo">Solicitudes por periodo</a>
+                                    </li>
+                                </ul>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link @(currentController == "Home" && currentAction == "AcercaDe" ? "active" : "")"
+                                   asp-controller="Home" asp-action="AcercaDe">Acerca de</a>
+                            </li>
+                        </ul>
+
+                        <!-- CONTROLES AUXILIARES TACTICAL HUD -->
+                        <div class="d-flex flex-wrap align-items-center gap-2 mt-2 mt-lg-0">
+                            <!-- Búsqueda Global -->
+                            <button type="button" class="btn btn-sm btn-hud-outline" data-bs-toggle="modal" data-bs-target="#modalBusquedaGlobal">
+                                <i data-lucide="search" class="icon-sm"></i> <span class="d-none d-sm-inline">Búsqueda</span>
+                            </button>
+
+                            <!-- Alertas Dinámicas -->
+                            <button type="button" class="btn btn-sm btn-tactical-warning position-relative" data-bs-toggle="offcanvas" data-bs-target="#offcanvasAlertas">
+                                <i data-lucide="alert-triangle" class="icon-sm"></i>
+                                <span>Alertas</span>
+                                @if (alertasActivas.Count > 0)
+                                {
+                                    <span class="hud-badge hud-badge-danger ms-1">@alertasActivas.Count</span>
+                                }
+                            </button>
+
+                            <!-- Selector de Perfil Visual -->
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-hud-outline dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i data-lucide="user-check" class="icon-sm"></i>
+                                    <span>Perfil: @perfilActual</span>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li class="dropdown-header hud-mono small text-muted">CAMBIAR PERFIL VISUAL:</li>
+                                    @foreach (var p in new[] { "Dirección", "Mando", "Responsables", "Integrantes" })
+                                    {
+                                        <li>
+                                            <form asp-controller="Home" asp-action="CambiarPerfil" method="post" class="m-0">
+                                                <input type="hidden" name="perfil" value="@p" />
+                                                <input type="hidden" name="returnUrl" value="@Context.Request.Path" />
+                                                <button type="submit" class="dropdown-item d-flex justify-content-between align-items-center @(perfilActual == p ? "active" : "")">
+                                                    <span>@p</span>
+                                                    @if (perfilActual == p)
+                                                    {
+                                                        <i data-lucide="check" class="icon-sm text-primary"></i>
+                                                    }
+                                                </button>
+                                            </form>
+                                        </li>
+                                    }
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+
+            <!-- BARRA DE CONTEXTO TÁCTICO -->
+            <div class="hud-context-bar">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="hud-mono text-muted">RUTA:</span>
+                    <span class="hud-badge hud-badge-neutral">@currentController.ToUpperInvariant() / @currentAction.ToUpperInvariant()</span>
+                    <span class="text-secondary d-none d-md-inline">· @ViewData["Title"]</span>
+                </div>
+                <div class="d-flex align-items-center gap-3">
+                    <span class="hud-mono small">
+                        <span class="status-dot dot-disponible"></span>
+                        INTEGRANTES ACTIVOS: <strong class="text-primary">@conectados / @ClanService.Integrantes.Count</strong>
+                    </span>
+                    <span class="d-none d-md-inline hud-mono text-muted">|</span>
+                    <span class="d-none d-md-inline hud-mono text-muted small">CONSOLA ADMINISTRATIVA ACTIVA</span>
+                </div>
+            </div>
+
+            <!-- ÁREA PRINCIPAL DE CONTENIDO -->
+            <main role="main" class="hud-main-content">
+                @RenderBody()
+            </main>
+
+            <!-- FOOTER INSTITUCIONAL -->
+            <footer class="hud-footer">
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-2">
+                    <div>
+                        &copy; 2026 — <strong class="text-light">Clan Exiliados</strong> · Plataforma Institucional MILSIM &amp; Roleplay · <span class="hud-mono">@ClanService.Configuracion.VersionPlataforma</span>
+                    </div>
+                    <div class="hud-mono small text-secondary">
+                        FACCIONES OFICIALES: <span class="text-light">Militares · Mercenarios · Terroristas</span> (Simulación en Arma 3, Arma Reforger y GTA V)
+                    </div>
+                </div>
+            </footer>
+        </div>
+    </div>
+
+    <!-- CONTENEDOR TOASTS -->
+    <div id="hudToastContainer" class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1090;"></div>
+
+    <!-- MODAL DE BÚSQUEDA GLOBAL -->
+    <div class="modal fade" id="modalBusquedaGlobal" tabindex="-1" aria-labelledby="lblBusquedaGlobal" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content hud-modal">
+                <div class="modal-header">
+                    <div class="d-flex align-items-center gap-2">
+                        <i data-lucide="search" class="text-primary"></i>
+                        <h5 class="modal-title hud-title mb-0" id="lblBusquedaGlobal">Búsqueda Global Institucional</h5>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="input-group mb-3">
+                        <input type="text" id="txtBusquedaGlobalInput" class="form-control hud-input"
+                               placeholder="Buscar por integrante, código CE-###, solicitud, unidad, operación, documento..."
+                               oninput="filtrarBusquedaGlobal();" />
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-3 small hud-mono text-muted">
+                        <span>REGISTROS INDEXADOS POR CATEGORÍA:</span>
+                        <span id="contadorBusquedaGlobal">Todos los registros activos</span>
+                    </div>
+
+                    <!-- Grupo 1: Integrantes -->
+                    <div class="global-search-group mb-3">
+                        <div class="hud-mono small text-primary mb-1 border-bottom border-secondary pb-1">INTEGRANTES Y CÓDIGOS CE</div>
+                        <div class="list-group list-group-flush">
+                            @foreach (var i in ClanService.Integrantes)
+                            {
+                                <a href="/Personal/Expediente/@i.CodigoCE" class="list-group-item list-group-item-action bg-transparent text-light border-secondary py-2 global-search-item"
+                                   data-search="@i.CodigoCE @i.Alias @i.Nombre @i.Rango @i.Faccion @i.Discord">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span><strong class="hud-mono text-primary">@i.CodigoCE</strong> · @i.Alias <small class="text-muted">(@i.Nombre)</small></span>
+                                        <span class="hud-badge hud-badge-neutral">@i.Rango · @i.Faccion</span>
+                                    </div>
+                                </a>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Grupo 2: Solicitudes -->
+                    <div class="global-search-group mb-3">
+                        <div class="hud-mono small text-warning mb-1 border-bottom border-secondary pb-1">SOLICITUDES DE INGRESO</div>
+                        <div class="list-group list-group-flush">
+                            @foreach (var s in ClanService.SolicitudesReclutamiento)
+                            {
+                                <a href="/Reclutamiento" class="list-group-item list-group-item-action bg-transparent text-light border-secondary py-2 global-search-item"
+                                   data-search="@s.Id @s.Alias @s.Nombre @s.Discord @s.EstadoAdmision">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span><strong class="hud-mono text-warning">@s.Id</strong> · @s.Alias <small class="text-muted">(@s.Discord)</small></span>
+                                        <span class="hud-badge hud-badge-warning">@s.EstadoAdmision</span>
+                                    </div>
+                                </a>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Grupo 3: Unidades y Departamentos -->
+                    <div class="global-search-group mb-3">
+                        <div class="hud-mono small text-info mb-1 border-bottom border-secondary pb-1">DEPARTAMENTOS Y UNIDADES</div>
+                        <div class="list-group list-group-flush">
+                            @foreach (var d in ClanService.Departamentos)
+                            {
+                                <a href="/Estructura/Departamentos" class="list-group-item list-group-item-action bg-transparent text-light border-secondary py-2 global-search-item"
+                                   data-search="@d.Id @d.Nombre @d.Responsable">
+                                    <strong>@d.Id · Departamento de @d.Nombre</strong> <small class="text-muted">— Responsable: @d.Responsable</small>
+                                </a>
+                            }
+                            @foreach (var u in ClanService.Unidades)
+                            {
+                                <a href="/Estructura/Unidades" class="list-group-item list-group-item-action bg-transparent text-light border-secondary py-2 global-search-item"
+                                   data-search="@u.Id @u.Nombre @u.DepartamentoAsociado @u.Lider">
+                                    <strong class="hud-mono text-primary">@u.Id</strong> · @u.Nombre <small class="text-muted">— Mando: @u.Lider</small>
+                                </a>
+                            }
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-hud-outline btn-sm" data-bs-dismiss="modal">Cerrar (Esc)</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- OFFCANVAS DE ALERTAS DINÁMICAS -->
+    <div class="offcanvas offcanvas-end hud-offcanvas" tabindex="-1" id="offcanvasAlertas" aria-labelledby="lblOffcanvasAlertas">
+        <div class="offcanvas-header">
+            <div class="d-flex align-items-center gap-2">
+                <i data-lucide="alert-triangle" class="text-warning"></i>
+                <h5 class="offcanvas-title hud-title mb-0" id="lblOffcanvasAlertas">Alertas Dinámicas del Sistema</h5>
+            </div>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Cerrar"></button>
+        </div>
+        <div class="offcanvas-body">
+            <p class="small text-secondary mb-3">
+                Indicadores y avisos administrativos generados en tiempo real según el estado de las actividades y solicitudes.
+            </p>
+            @foreach (var al in ClanService.Alertas)
+            {
+                var badgeCls = al.Nivel == "Crítica" ? "hud-badge-danger" : (al.Nivel == "Importante" ? "hud-badge-warning" : "hud-badge-info");
+                <div class="hud-panel p-3 mb-3 @(al.Atendida ? "opacity-50" : "")">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="hud-badge @badgeCls">@al.Nivel</span>
+                        <small class="hud-mono text-muted">@al.Id · @al.ModuloOrigen</small>
+                    </div>
+                    <div class="fw-bold text-light small mb-1">@al.Titulo</div>
+                    <p class="small text-secondary mb-2">@al.Detalle</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <a href="@al.EnlaceAccion" class="btn btn-hud-outline btn-sm py-1 px-2">Ir al módulo &rarr;</a>
+                        @if (!al.Atendida)
+                        {
+                            <form asp-controller="Home" asp-action="AtenderAlerta" method="post" class="m-0">
+                                <input type="hidden" name="id" value="@al.Id" />
+                                <input type="hidden" name="returnUrl" value="@Context.Request.Path" />
+                                <button type="submit" class="btn btn-hud-primary btn-sm py-1 px-2">Marcar atendida</button>
+                            </form>
+                        }
+                        else
+                        {
+                            <span class="hud-badge hud-badge-neutral">Atendida</span>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- OFFCANVAS DE VISTA PREVIA RÁPIDA DE INTEGRANTE -->
+    <div class="offcanvas offcanvas-end hud-offcanvas" tabindex="-1" id="offcanvasVistaPreviaIntegrante" aria-labelledby="lblVistaPreviaIntegrante">
+        <div class="offcanvas-header">
+            <div class="d-flex align-items-center gap-2">
+                <i data-lucide="user-check" class="text-primary"></i>
+                <h5 class="offcanvas-title hud-title mb-0" id="lblVistaPreviaIntegrante">Ficha Rápida de Integrante</h5>
+            </div>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Cerrar"></button>
+        </div>
+        <div class="offcanvas-body">
+            <div class="hud-panel p-3 mb-3">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="hud-badge hud-badge-success fs-6" id="prevCodigoCE">CE-001</span>
+                    <span class="hud-badge hud-badge-warning" id="prevRango">Capitán</span>
+                </div>
+                <h4 class="hud-title mb-0 text-light" id="prevAlias">Paquito</h4>
+                <p class="text-secondary small mb-3" id="prevNombre">Marco Antonio Guzmán</p>
+                <table class="table hud-table table-sm mb-0 small">
+                    <tr><th class="text-muted">Facción oficial:</th><td id="prevFaccion">Militares</td></tr>
+                    <tr><th class="text-muted">Departamentos:</th><td id="prevDepto">Operaciones</td></tr>
+                    <tr><th class="text-muted">Unidades:</th><td id="prevUnidad">UE-003</td></tr>
+                    <tr><th class="text-muted">Horas MILSIM:</th><td class="hud-mono" id="prevHoras">100 h</td></tr>
+                    <tr><th class="text-muted">Estado Institucional:</th><td id="prevEstado">Activo</td></tr>
+                    <tr><th class="text-muted">Disponibilidad:</th><td id="prevDisp">Disponible</td></tr>
+                    <tr><th class="text-muted">Discord:</th><td><code class="hud-mono text-light" id="prevDiscord">Paquito#7777</code></td></tr>
+                </table>
+            </div>
+            <div class="d-grid gap-2">
+                <a id="prevLinkExpediente" href="/Personal/Expediente/CE-001" class="btn btn-hud-primary justify-content-center">
+                    <i data-lucide="file-text" class="icon-sm"></i> Ver Expediente Completo
+                </a>
+                <a id="prevLinkCredencial" href="/Personal/Credencial/CE-001" class="btn btn-hud-outline justify-content-center">
+                    <i data-lucide="award" class="icon-sm"></i> Credencial Digital Institucional
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE CONFIRMACIÓN DE SALIDA (ARCHIVO -> SALIR) -->
+    <div class="modal fade" id="modalSalirSistema" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content hud-modal">
+                <div class="modal-header">
+                    <div class="d-flex align-items-center gap-2">
+                        <i data-lucide="log-out" class="text-danger"></i>
+                        <h5 class="modal-title hud-title mb-0">Confirmar Salida del Sistema</h5>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-1 text-light">¿Desea cerrar la sesión de la plataforma institucional <strong>Clan Exiliados</strong>?</p>
+                    <p class="small text-secondary mb-0">
+                        Se cerrará la sesión de la consola táctica y regresará a la pantalla inicial.
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-hud-outline btn-sm" data-bs-dismiss="modal">No, permanecer en el panel</button>
+                    <a asp-controller="Home" asp-action="Index" class="btn btn-tactical-danger btn-sm">Sí, volver al inicio</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/lib/lucide/lucide.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

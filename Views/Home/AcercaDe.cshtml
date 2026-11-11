@@ -1,0 +1,144 @@
+@model ClanInstitutionalService
+@{
+    ViewData["Title"] = "Acerca del sistema";
+}
+
+<div class="mb-4">
+    <span class="hud-badge-active px-3 py-1 mb-2 d-inline-block">DOSSIER INSTITUCIONAL · CLAN EXILIADOS</span>
+    <h2 class="hud-title mb-1">CLAN EXILIADOS — PLATAFORMA WEB INSTITUCIONAL</h2>
+    <h3 class="h5 text-uppercase mb-2 text-muted" style="font-family: var(--font-display);">Sistema de Admisión y Gestión Operativa</h3>
+    <p class="text-secondary mb-0">
+        Comunidad ficticia de simulación táctica y roleplay en videojuegos (Arma 3, Arma Reforger, GTA V / FiveM).
+    </p>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-12 col-lg-6">
+        <div class="hud-panel p-4 h-100">
+            <h4 class="h5 hud-title mb-3 d-flex align-items-center">
+                <i data-lucide="shield" class="me-2 text-primary icon-md"></i>
+                <span>Identidad y Organización</span>
+            </h4>
+            <p style="color: var(--color-text-main);">
+                <strong>Clan Exiliados</strong> es una organización orientada a experiencias de simulación táctica (MILSIM) y Roleplay en plataformas dedicadas.
+            </p>
+            <p class="mb-0 text-secondary">
+                Esta plataforma centraliza la recepción y administración de solicitudes de ingreso, el directorio de efectivos, los registros operativos y la gobernanza interna.
+            </p>
+        </div>
+    </div>
+
+    <div class="col-12 col-lg-6">
+        <div class="hud-panel p-4 h-100">
+            <h4 class="h5 hud-title mb-3 d-flex align-items-center">
+                <i data-lucide="crosshair" class="me-2 text-primary icon-md"></i>
+                <span>Plataformas de Operación</span>
+            </h4>
+            <p class="text-secondary mb-2">
+                Nuestras actividades se desarrollan en las siguientes plataformas compatibles:
+            </p>
+            <ul class="mb-2" style="color: var(--color-text-main);">
+                <li><strong>Arma 3</strong> — Operaciones combinadas y despliegues tácticos.</li>
+                <li><strong>Arma Reforger</strong> — Maniobras tácticas de infantería.</li>
+                <li><strong>GTA V / FiveM</strong> — Roleplay táctico y seguridad privada ficticia.</li>
+            </ul>
+            <p class="small mb-0 text-warning">
+                Nota institucional: Todas las jerarquías, operaciones y credenciales pertenecen al ámbito de los videojuegos y la simulación.
+            </p>
+        </div>
+    </div>
+</div>
+
+<!-- Las tres facciones oficiales -->
+<div class="d-flex align-items-center justify-content-between mb-3">
+    <h4 class="h5 hud-title mb-0 d-flex align-items-center">
+        <i data-lucide="layers" class="me-2 text-primary icon-md"></i>
+        <span>Facciones Oficiales</span>
+    </h4>
+    <a asp-controller="Estructura" asp-action="Facciones" class="btn btn-sm btn-hud-outline d-inline-flex align-items-center">
+        <i data-lucide="external-link" class="me-1 icon-sm"></i>
+        <span>Ver Facciones</span>
+    </a>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-12 col-md-4">
+        <div class="hud-panel p-3 h-100" style="border-top: 3px solid var(--color-primary);">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+                <h5 class="mb-0 fw-bold" style="font-family: var(--font-display);">Militares</h5>
+                <span class="hud-badge badge-militares">Facción</span>
+            </div>
+            <p class="text-secondary small mb-0">
+                Efectivos y postulantes orientados a operaciones tácticas convencionales, infantería y mando de escuadra.
+            </p>
+        </div>
+    </div>
+    <div class="col-12 col-md-4">
+        <div class="hud-panel p-3 h-100" style="border-top: 3px solid var(--color-amber);">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+                <h5 class="mb-0 fw-bold" style="font-family: var(--font-display);">Mercenarios</h5>
+                <span class="hud-badge badge-mercenarios">Facción</span>
+            </div>
+            <p class="text-secondary small mb-0">
+                Operadores especializados en seguridad privada, soporte táctico y misiones de contratación independiente.
+            </p>
+        </div>
+    </div>
+    <div class="col-12 col-md-4">
+        <div class="hud-panel p-3 h-100" style="border-top: 3px solid var(--color-danger);">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+                <h5 class="mb-0 fw-bold" style="font-family: var(--font-display);">Terroristas</h5>
+                <span class="hud-badge badge-terroristas">Facción</span>
+            </div>
+            <p class="text-secondary small mb-0">
+                Fuerzas de oposición ficticia (OpFor) para simulación de escenarios adversarios en entrenamientos y eventos.
+            </p>
+        </div>
+    </div>
+</div>
+
+<!-- Resumen técnico de la solución -->
+<div class="hud-panel p-4">
+    <h4 class="h5 hud-title mb-3 d-flex align-items-center">
+        <i data-lucide="cpu" class="me-2 text-primary icon-md"></i>
+        <span>Especificaciones de la Plataforma</span>
+    </h4>
+    <div class="row g-3">
+        <div class="col-12 col-md-6">
+            <table class="table hud-table table-sm mb-0">
+                <tbody>
+                    <tr>
+                        <th class="text-muted" style="width: 45%;">Solución:</th>
+                        <td class="hud-mono">ClanExiliados.sln / ClanExiliados_Web.csproj</td>
+                    </tr>
+                    <tr>
+                        <th class="text-muted">Arquitectura:</th>
+                        <td>ASP.NET Core MVC (C#, Razor, Tag Helpers)</td>
+                    </tr>
+                    <tr>
+                        <th class="text-muted">Diseño Visual:</th>
+                        <td>Tactical HUD (Paleta institucional, fuentes Rajdhani, Share Tech Mono e Inter)</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="col-12 col-md-6">
+            <table class="table hud-table table-sm mb-0">
+                <tbody>
+                    <tr>
+                        <th class="text-muted" style="width: 45%;">Jerarquía:</th>
+                        <td>8 Rangos Oficiales (Director/Fundador a Recluta)</td>
+                    </tr>
+                    <tr>
+                        <th class="text-muted">Estructura:</th>
+                        <td>5 Departamentos y 5 Unidades Tácticas (UE-001 a UE-005)</td>
+                    </tr>
+                    <tr>
+                        <th class="text-muted">Facciones:</th>
+                        <td>Militares, Mercenarios y Terroristas</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,113 @@
+@{
+    ViewData["Title"] = "Mantenimiento de Solicitudes";
+}
+
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-3 gap-2">
+    <div>
+        <h2 class="hud-title mb-0">Mantenimiento de Solicitudes</h2>
+        <p class="text-secondary mb-0 small">Listado general y administración de solicitudes de ingreso a Clan Exiliados.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a class="btn btn-hud-outline btn-sm" asp-controller="Personal" asp-action="Index">
+            <i data-lucide="users" class="icon-sm"></i> Integrantes
+        </a>
+        <a class="btn btn-hud-primary btn-sm" asp-controller="Solicitudes" asp-action="Nuevo">
+            <i data-lucide="plus" class="icon-sm"></i> Nueva
+        </a>
+    </div>
+</div>
+
+<!-- Barra de filtro de solicitudes -->
+<div class="hud-panel p-3 mb-3">
+    <div class="row g-2 align-items-center">
+        <div class="col-auto">
+            <label for="txtBuscar" class="col-form-label form-label mb-0">Buscar (Jugador/Discord):</label>
+        </div>
+        <div class="col-12 col-sm-5 col-md-4">
+            <input type="text" id="txtBuscar" class="form-control hud-input" placeholder="Buscar por Jugador o Discord (ej. Paquito)" />
+        </div>
+        <div class="col-auto d-flex gap-2">
+            <button class="btn btn-hud-primary btn-sm" type="button" onclick="filtrarTablaMantenimientoPA2();">
+                <i data-lucide="search" class="icon-sm"></i> Buscar
+            </button>
+            <button class="btn btn-hud-outline btn-sm" type="button" onclick="restablecerTablaMantenimientoPA2();">Ver todas</button>
+        </div>
+    </div>
+</div>
+
+<!-- Grilla de mantenimiento con 8 columnas -->
+<div class="hud-panel p-0 overflow-hidden mb-3">
+    <div class="table-responsive">
+        <table id="tablaSolicitudesPA2" class="table hud-table align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>N.º</th>
+                    <th>Fecha</th>
+                    <th>Jugador</th>
+                    <th>Rango</th>
+                    <th>Especialidad</th>
+                    <th class="text-end">Horas</th>
+                    <th>Facción</th>
+                    <th>Discord</th>
+                    <th class="text-end">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="hud-mono fw-bold text-light">1</td>
+                    <td class="hud-mono">04/07/2026</td>
+                    <td class="fw-bold text-light">Paquito</td>
+                    <td>Capitán</td>
+                    <td>Piloto</td>
+                    <td class="text-end hud-mono text-warning">100</td>
+                    <td><span class="hud-badge badge-militares">Militares</span></td>
+                    <td><code class="hud-mono text-light">Paquito#7777</code></td>
+                    <td class="text-end">
+                        <button class="btn btn-sm btn-hud-outline py-0 px-2 me-1" type="button" onclick="mostrarToastHUD('Solicitud N.º 1 (Paquito) seleccionada para edición.', 'info');">Editar</button>
+                        <button class="btn btn-sm btn-tactical-danger py-0 px-2" type="button" onclick="mostrarToastHUD('Solicitud N.º 1 (Paquito) seleccionada para eliminación.', 'error');">Eliminar</button>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="hud-mono fw-bold text-light">2</td>
+                    <td class="hud-mono">12/07/2026</td>
+                    <td class="fw-bold text-light">Wolf_Alpha</td>
+                    <td>Sargento</td>
+                    <td>Infantería</td>
+                    <td class="text-end hud-mono text-warning">850</td>
+                    <td><span class="hud-badge badge-mercenarios">Mercenarios</span></td>
+                    <td><code class="hud-mono text-light">Wolf#2041</code></td>
+                    <td class="text-end">
+                        <button class="btn btn-sm btn-hud-outline py-0 px-2 me-1" type="button" onclick="mostrarToastHUD('Solicitud N.º 2 (Wolf_Alpha) seleccionada para edición.', 'info');">Editar</button>
+                        <button class="btn btn-sm btn-tactical-danger py-0 px-2" type="button" onclick="mostrarToastHUD('Solicitud N.º 2 (Wolf_Alpha) seleccionada para eliminación.', 'error');">Eliminar</button>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="hud-mono fw-bold text-light">3</td>
+                    <td class="hud-mono">23/07/2026</td>
+                    <td class="fw-bold text-light">Kira_Vex</td>
+                    <td>Teniente</td>
+                    <td>Piloto</td>
+                    <td class="text-end hud-mono text-warning">1,200</td>
+                    <td><span class="hud-badge badge-terroristas">Terroristas</span></td>
+                    <td><code class="hud-mono text-light">KiraVex#9012</code></td>
+                    <td class="text-end">
+                        <button class="btn btn-sm btn-hud-outline py-0 px-2 me-1" type="button" onclick="mostrarToastHUD('Solicitud N.º 3 (Kira_Vex) seleccionada para edición.', 'info');">Editar</button>
+                        <button class="btn btn-sm btn-tactical-danger py-0 px-2" type="button" onclick="mostrarToastHUD('Solicitud N.º 3 (Kira_Vex) seleccionada para eliminación.', 'error');">Eliminar</button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Contador inferior y botones de acción -->
+<div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2 hud-panel py-2 px-3">
+    <span id="lblTotalSolicitudesPA2" class="hud-mono fw-bold text-light">Total de solicitudes: 3</span>
+    <div class="d-flex flex-wrap gap-2">
+        <a class="btn btn-sm btn-hud-primary" asp-controller="Solicitudes" asp-action="Nuevo">
+            <i data-lucide="plus" class="icon-sm"></i> Nueva Solicitud
+        </a>
+        <button class="btn btn-sm btn-hud-outline" type="button" onclick="mostrarToastHUD('Seleccione un registro para editar.', 'info');">Editar</button>
+        <button class="btn btn-sm btn-tactical-danger" type="button" onclick="mostrarToastHUD('Seleccione un registro para eliminar.', 'error');">Eliminar</button>
+    </div>
+</div>

@@ -1,0 +1,188 @@
+@model IntegranteCE
+@inject ClanInstitutionalService ClanService
+@{
+    ViewData["Title"] = $"Expediente {Model.CodigoCE} — {Model.Alias}";
+    var reconocimientos = ClanService.Reconocimientos.Where(r => r.BeneficiarioCodigoCE == Model.CodigoCE).ToList();
+}
+
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-3 gap-2">
+    <div>
+        <span class="hud-badge-active px-2 py-1 mb-1 d-inline-block">EXPEDIENTE INDIVIDUAL INSTITUCIONAL · @Model.CodigoCE</span>
+        <h2 class="titulo-negocio mb-0">@Model.CodigoCE · @Model.Alias (@Model.Nombre)</h2>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-action="Credencial" asp-route-id="@Model.CodigoCE" class="btn btn-sm btn-hud-primary d-inline-flex align-items-center">
+            <i data-lucide="credit-card" class="me-1"></i>
+            <span>Ver Credencial Digital CE</span>
+        </a>
+        <a asp-action="Index" class="btn btn-sm btn-hud-outline d-inline-flex align-items-center">
+            <i data-lucide="arrow-left" class="me-1"></i>
+            <span>Volver a Personal</span>
+        </a>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <!-- Ficha de Identificación y Estados -->
+    <div class="col-12 col-lg-5">
+        <div class="hud-panel p-4 h-100">
+            <h4 class="h5 titulo-negocio border-bottom pb-2 mb-3 d-flex align-items-center" style="border-color: var(--border-dark) !important;">
+                <i data-lucide="user" class="me-2" style="color: var(--color-primary); width: 20px; height: 20px;"></i>
+                <span>Datos de Identificación y Escalafón</span>
+            </h4>
+            <table class="table hud-table table-sm mb-0">
+                <tbody>
+                    <tr><th class="text-muted">Identificador CE:</th><td><span class="hud-mono fw-bold" style="color: var(--color-primary);">@Model.CodigoCE</span> <span class="small text-muted">(Registro #@Model.NumeroPA2)</span></td></tr>
+                    <tr><th class="text-muted">Nombre Completo:</th><td style="color: var(--text-primary);">@Model.Nombre</td></tr>
+                    <tr><th class="text-muted">Alias / Jugador:</th><td class="fw-bold" style="color: var(--text-primary);">@Model.Alias</td></tr>
+                    <tr><th class="text-muted">Discord:</th><td><code class="hud-mono">@Model.Discord</code></td></tr>
+                    <tr><th class="text-muted">Edad Verificada:</th><td>@Model.Edad años <span class="small text-muted">(Requisito +18 cumplido)</span></td></tr>
+                    <tr><th class="text-muted">Rango Oficial:</th><td><span class="hud-badge-alert">@Model.Rango</span></td></tr>
+                    <tr><th class="text-muted">Facción oficial:</th><td><span class="badge @(Model.Faccion == "Militares" ? "badge-militares" : (Model.Faccion == "Mercenarios" ? "badge-mercenarios" : "badge-terroristas"))">@Model.Faccion</span></td></tr>
+                    <tr><th class="text-muted">Departamentos:</th><td>@string.Join(", ", Model.Departamentos)</td></tr>
+                    <tr><th class="text-muted">Unidades Tácticas:</th><td>@string.Join(", ", Model.Unidades)</td></tr>
+                    <tr><th class="text-muted">Fecha de Ingreso:</th><td class="hud-mono">@Model.FechaIngreso.ToString("dd/MM/yyyy")</td></tr>
+                    <tr><th class="text-muted">Estado Institucional:</th><td><span class="hud-badge-active">@Model.EstadoInstitucional</span></td></tr>
+                    <tr><th class="text-muted">Disponibilidad Actual:</th><td><span class="hud-badge-neutral">@Model.Disponibilidad</span> <small class="text-muted">(Turno: @Model.TurnoDisponibilidad)</small></td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Especialidades, Experiencia e Historial -->
+    <div class="col-12 col-lg-7">
+        <div class="hud-panel p-4 mb-4">
+            <h4 class="h5 titulo-negocio border-bottom pb-2 mb-3 d-flex align-items-center" style="border-color: var(--border-dark) !important;">
+                <i data-lucide="award" class="me-2" style="color: var(--color-primary); width: 20px; height: 20px;"></i>
+                <span>Especialidades, Insignias y Experiencia</span>
+            </h4>
+            <div class="mb-3">
+                <strong class="small text-uppercase text-muted d-block mb-1">Especialidades Tácticas:</strong>
+                <div class="d-flex flex-wrap gap-1">
+                    @foreach (var esp in Model.Especialidades)
+                    {
+                        <span class="badge hud-mono" style="background: var(--bg-main); border: 1px solid var(--border-dark); color: var(--text-primary); padding: 5px 9px;">
+                            @esp
+                        </span>
+                    }
+                </div>
+            </div>
+            <div class="mb-3">
+                <strong class="small text-uppercase text-muted d-block mb-1">Insignias Administrativas Concedidas:</strong>
+                @if (Model.InsigniasAdministrativas.Any())
+                {
+                    <div class="d-flex flex-wrap gap-1">
+                        @foreach (var ins in Model.InsigniasAdministrativas)
+                        {
+                            <span class="badge hud-mono" style="background: var(--bg-elevated); border: 1px solid var(--border-dark); color: var(--color-alert); padding: 5px 9px;">
+                                @ins
+                            </span>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <span class="text-muted small">Sin insignias administrativas adicionales.</span>
+                }
+            </div>
+            <div class="row g-2 small mb-3">
+                <div class="col-md-6">
+                    <div class="p-3 rounded h-100" style="background: var(--bg-elevated); border: 1px solid var(--border-dark);">
+                        <strong class="d-block mb-1" style="color: var(--color-primary);">Experiencia MILSIM (<span class="hud-mono">@Model.HorasMilsim.ToString("N0")</span> h):</strong>
+                        <span style="color: var(--text-secondary);">@Model.ExperienciaMilsim</span>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="p-3 rounded h-100" style="background: var(--bg-elevated); border: 1px solid var(--border-dark);">
+                        <strong class="d-block mb-1" style="color: var(--color-alert);">Experiencia Roleplay (RP):</strong>
+                        <span style="color: var(--text-secondary);">@Model.ExperienciaRP</span>
+                    </div>
+                </div>
+            </div>
+            <div class="small text-muted p-2 rounded" style="background: var(--bg-main); border: 1px solid var(--border-dark);">
+                <strong style="color: var(--text-primary);">Observaciones de Mando:</strong> @Model.Observaciones
+            </div>
+        </div>
+
+        <div class="hud-panel p-4">
+            <h4 class="h5 titulo-negocio border-bottom pb-2 mb-3 d-flex align-items-center" style="border-color: var(--border-dark) !important;">
+                <i data-lucide="file-text" class="me-2" style="color: var(--color-primary); width: 20px; height: 20px;"></i>
+                <span>Historial Institucional y Condecoraciones</span>
+            </h4>
+            @if (reconocimientos.Any())
+            {
+                <div class="mb-3">
+                    @foreach (var r in reconocimientos)
+                    {
+                        <div class="p-2 rounded mb-2 small" style="background: var(--bg-elevated); border-left: 3px solid var(--color-alert); border: 1px solid var(--border-dark);">
+                            <strong style="color: var(--text-primary);"><span class="hud-mono">@r.Id</span> · @r.Nombre</strong> <span class="text-muted">(@r.Categoria — @r.Estado)</span>
+                            <div class="text-muted">@r.Motivo <span class="hud-mono">(@r.Fecha.ToString("dd/MM/yyyy"))</span></div>
+                        </div>
+                    }
+                </div>
+            }
+            <ul class="list-group list-group-flush small">
+                @foreach (var h in Model.HistorialInstitucional)
+                {
+                    <li class="list-group-item bg-transparent px-0 py-1" style="color: var(--text-primary); border-color: var(--border-dark);">
+                        <span class="hud-mono" style="color: var(--color-primary); margin-right: 6px;">[OK]</span> @h
+                    </li>
+                }
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- Antecedentes RP Individuales -->
+<div class="hud-panel p-4">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center border-bottom pb-2 mb-3 gap-2" style="border-color: var(--border-dark) !important;">
+        <div>
+            <h4 class="h5 titulo-negocio mb-0 d-flex align-items-center">
+                <i data-lucide="film" class="me-2" style="color: var(--color-primary); width: 20px; height: 20px;"></i>
+                <span>Antecedentes RP Individuales (Ficción de Videojuegos)</span>
+            </h4>
+            <p class="small text-muted mb-0">Roles interpretados en servidores externos o anteriores. No equivalen a rango ni afiliación institucional actual.</p>
+        </div>
+        <span class="hud-badge-neutral">Categorías: Militares · Mercenarios · Terroristas (OpFor Ficticio)</span>
+    </div>
+
+    @if (Model.AntecedentesRP.Any())
+    {
+        <div class="table-responsive">
+            <table class="table hud-table table-sm align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Categoría Ficticia</th>
+                        <th>Plataforma / Servidor</th>
+                        <th>Personaje / Alias RP</th>
+                        <th>Rol Interpretado y Actividades</th>
+                        <th>Periodo</th>
+                        <th>Observaciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var ant in Model.AntecedentesRP)
+                    {
+                        <tr>
+                            <td class="hud-mono" style="color: var(--color-primary);">@ant.Id</td>
+                            <td><span class="hud-badge-neutral">@ant.CategoriaAntecedente</span></td>
+                            <td><strong style="color: var(--text-primary);">@ant.Plataforma</strong><div class="small text-muted">@ant.Servidor</div></td>
+                            <td style="color: var(--text-primary);">@ant.PersonajeOAlias</td>
+                            <td>
+                                <strong style="color: var(--text-primary);">@ant.TipoRolInterpretado</strong>
+                                <div class="small text-muted">@ant.Actividades — @ant.Descripcion</div>
+                            </td>
+                            <td class="hud-mono">@ant.Periodo</td>
+                            <td class="small text-muted">@ant.Observaciones</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <p class="text-muted mb-0">Este integrante no registra antecedentes RP adicionales fuera de su admisión inicial.</p>
+    }
+</div>

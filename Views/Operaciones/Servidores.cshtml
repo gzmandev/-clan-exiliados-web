@@ -1,0 +1,131 @@
+@model ClanExiliados_Web.Services.ClanInstitutionalService
+@{
+    ViewData["Title"] = "Plataformas, Servidores y Antecedentes RP";
+    var filtroPlataforma = ViewData["FiltroPlataforma"]?.ToString() ?? "";
+    var filtroCategoria = ViewData["FiltroCategoriaAntecedente"]?.ToString() ?? "";
+
+    var servidores = Model.Servidores.AsEnumerable();
+    if (!string.IsNullOrEmpty(filtroPlataforma))
+        servidores = servidores.Where(s => s.Plataforma.Equals(filtroPlataforma, StringComparison.OrdinalIgnoreCase));
+
+    var antecedentes = Model.Integrantes.SelectMany(i => i.AntecedentesRP).AsEnumerable();
+    if (!string.IsNullOrEmpty(filtroCategoria))
+        antecedentes = antecedentes.Where(a => a.CategoriaAntecedente.Equals(filtroCategoria, StringComparison.OrdinalIgnoreCase));
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div>
+        <div class="hud-kicker">MÓDULO 10 · DIRECTORIO DE SERVIDORES (SRV-###) Y ANTECEDENTES RP FICTICIOS</div>
+        <h2 class="hud-title mb-1">Plataformas, Servidores y Antecedentes de Roleplay</h2>
+        <p class="text-secondary mb-0 small">
+            Presencia institucional en Arma 3, Arma Reforger y GTA V / FiveM, junto al registro de roles ficticios interpretados por el personal.
+        </p>
+    </div>
+    <div class="hud-badge hud-badge-warning">CONTEXTO ESTRICTAMENTE FICTICIO (VIDEOJUEGOS / MILSIM / RP)</div>
+</div>
+
+<!-- DIRECTORIO DE SERVIDORES -->
+<h4 class="hud-title mb-3">1. Directorio Institucional de Servidores y Comunidades (@Model.Servidores.Count)</h4>
+<div class="row g-4 mb-5">
+    @foreach (var s in servidores)
+    {
+        <div class="col-xl-6">
+            <div class="hud-panel p-4 h-100">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="hud-mono fw-bold text-success">@s.Id</span>
+                        <span class="hud-badge hud-badge-info">@s.Plataforma</span>
+                        <span class="hud-badge hud-badge-neutral">@s.Modalidad</span>
+                    </div>
+                    <span class="hud-badge @(s.Estado == "Activo" ? "hud-badge-success" : "hud-badge-warning")">@s.Estado.ToUpperInvariant()</span>
+                </div>
+
+                <h5 class="hud-title text-light mb-1">@s.Nombre</h5>
+                <div class="small text-warning hud-mono mb-2">Universo / Comunidad: @s.ComunidadUniversoRP · Enlace: @s.Enlace</div>
+                <p class="small text-secondary mb-3">@s.Descripcion</p>
+
+                <div class="row g-2 small mb-3">
+                    <div class="col-sm-6">
+                        <span class="text-secondary">Responsable CE:</span> <strong class="text-light">@s.Responsable</strong>
+                    </div>
+                    <div class="col-sm-6">
+                        <span class="text-secondary">Inicio Participación:</span> <strong class="hud-mono text-light">@s.InicioParticipacion.ToString("dd/MM/yyyy")</strong>
+                    </div>
+                </div>
+
+                <div class="d-flex flex-wrap justify-content-between align-items-center pt-2 border-top border-secondary small">
+                    <div>
+                        <span class="text-secondary">Unidades destacadas:</span>
+                        <span class="hud-mono text-success ms-1">@string.Join(", ", s.Unidades)</span>
+                    </div>
+                    <div>
+                        <span class="text-secondary">Efectivos registrados:</span>
+                        <strong class="hud-mono text-light ms-1">@s.IntegrantesCodigos.Count</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- ANTECEDENTES RP INDIVIDUALES -->
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <div>
+        <h4 class="hud-title mb-0">2. Registro Individual de Antecedentes RP (Ficción de Videojuegos)</h4>
+        <div class="small text-secondary">Categorías narrativas: Militares, Mercenarios (PMC) y Terroristas/Insurgencia OpFor (exclusivamente dentro de campañas ficticias).</div>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-action="Servidores" asp-route-categoriaAntecedente="" class="btn btn-sm @(string.IsNullOrEmpty(filtroCategoria) ? "btn-hud-primary" : "btn-hud-outline")">Todas</a>
+        <a asp-action="Servidores" asp-route-categoriaAntecedente="Militares" class="btn btn-sm @(filtroCategoria == "Militares" ? "btn-hud-primary" : "btn-hud-outline")">Militares</a>
+        <a asp-action="Servidores" asp-route-categoriaAntecedente="Mercenarios" class="btn btn-sm @(filtroCategoria == "Mercenarios" ? "btn-hud-primary" : "btn-hud-outline")">Mercenarios</a>
+        <a asp-action="Servidores" asp-route-categoriaAntecedente="Terroristas" class="btn btn-sm @(filtroCategoria == "Terroristas" ? "btn-hud-primary" : "btn-hud-outline")">OpFor / Insurgencia Ficticia</a>
+    </div>
+</div>
+
+<div class="hud-panel p-4">
+    <div class="table-responsive">
+        <table class="table hud-table align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>INTEGRANTE</th>
+                    <th>CATEGORÍA RP (FICTICIA)</th>
+                    <th>PLATAFORMA / SERVIDOR</th>
+                    <th>PERSONAJE / ROL INTERPRETADO</th>
+                    <th>PERIODO Y EXPERIENCIA</th>
+                    <th>OBSERVACIONES</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var a in antecedentes)
+                {
+                    var badgeCat = a.CategoriaAntecedente switch
+                    {
+                        "Militares" => "hud-badge-success",
+                        "Mercenarios" => "hud-badge-warning",
+                        _ => "hud-badge-danger"
+                    };
+                    <tr>
+                        <td class="hud-mono text-secondary">@a.Id</td>
+                        <td>
+                            <a asp-controller="Personal" asp-action="Expediente" asp-route-id="@a.CodigoCE" class="hud-mono fw-bold text-success text-decoration-none">
+                                @a.CodigoCE · @a.AliasIntegrante
+                            </a>
+                        </td>
+                        <td><span class="hud-badge @badgeCat">@a.CategoriaAntecedente</span></td>
+                        <td>
+                            <div class="text-light small fw-bold">@a.Plataforma</div>
+                            <div class="text-secondary small">@a.Servidor</div>
+                        </td>
+                        <td>
+                            <div class="text-light small fw-bold">@a.TipoRolInterpretado</div>
+                            <div class="text-secondary small">@a.Descripcion</div>
+                        </td>
+                        <td class="hud-mono small text-info">@a.Periodo · @a.Experiencia</td>
+                        <td class="small text-secondary">@a.Observaciones</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

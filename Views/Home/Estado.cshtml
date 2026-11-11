@@ -1,0 +1,30 @@
+@{
+    ViewData["Title"] = "Página no encontrada";
+    var codigo = ViewData["CodigoError"] ?? 404;
+}
+
+<div class="text-center mt-4 mx-auto hud-panel p-5 shadow" style="max-width: 700px; border-color: var(--color-alert) !important;">
+    <div class="mb-3 d-flex justify-content-center" aria-hidden="true">
+        <i data-lucide="alert-triangle" style="width: 56px; height: 56px; color: var(--color-alert); stroke-width: 1.8;"></i>
+    </div>
+    <span class="hud-badge-alert px-3 py-2 mb-3 fs-6 d-inline-block">
+        ALERTA TACTICAL HUD · CÓDIGO DE ERROR: @codigo — SECTOR NO ENCONTRADO
+    </span>
+    <h1 class="display-6 fw-bold titulo-negocio mb-2">Esa página no existe</h1>
+    <p class="lead mb-2" style="color: var(--text-primary);">
+        La dirección solicitada no corresponde a ninguna sección operativa ni módulo registrado en la plataforma institucional de <strong>Clan Exiliados</strong>.
+    </p>
+    <p class="text-muted mb-4">
+        Verifica las coordenadas ingresadas en la barra de direcciones del navegador o regresa al Centro de Mando para elegir una opción válida del menú.
+    </p>
+    <div class="d-flex justify-content-center gap-2 flex-wrap">
+        <a class="btn btn-hud-primary px-4 py-2 d-inline-flex align-items-center" asp-controller="Home" asp-action="Index">
+            <i data-lucide="home" class="me-2"></i>
+            <span>Volver al inicio</span>
+        </a>
+        <a class="btn btn-hud-outline px-4 py-2 d-inline-flex align-items-center" asp-controller="Solicitudes" asp-action="Index">
+            <i data-lucide="clipboard-list" class="me-2"></i>
+            <span>Ir a Solicitudes</span>
+        </a>
+    </div>
+</div>

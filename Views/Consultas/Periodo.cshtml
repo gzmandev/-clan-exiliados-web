@@ -1,0 +1,129 @@
+@using System.Text.Encodings.Web
+@inject ClanInstitutionalService ClanService
+@{
+    ViewData["Title"] = "Solicitudes por Periodo";
+    var inicioDefault = ViewBag.Desde as string ?? "2026-07-01";
+    var finDefault = ViewBag.Hasta as string ?? "2026-10-31";
+    var faccionSeleccionada = ViewBag.Faccion as string ?? "(Todos)";
+}
+
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-3 gap-2">
+    <div>
+        <h2 class="hud-title mb-1">Consultar Solicitudes por Periodo y Facción</h2>
+        <p class="text-secondary mb-0 small">Búsqueda y filtrado de solicitudes registradas según rango de fechas y facción oficial.</p>
+    </div>
+    <div>
+        <a class="btn btn-sm btn-hud-outline d-inline-flex align-items-center" asp-controller="Analitica" asp-action="Index">
+            <i data-lucide="bar-chart-3" class="me-1 icon-sm"></i>
+            <span>Estadísticas y Reportes</span>
+        </a>
+    </div>
+</div>
+
+<!-- Parámetros de la consulta: Desde, Hasta, Facción y botones Consultar / Exportar a Excel -->
+<div class="hud-panel p-3 mb-3">
+    <div class="row g-3 align-items-end">
+        <div class="col-12 col-sm-6 col-md-3">
+            <label for="dtpDesde" class="form-label fw-semibold" style="color: var(--color-text-main);">Desde:</label>
+            <input type="date" id="dtpDesde" class="form-control hud-input hud-mono" value="@inicioDefault" />
+        </div>
+        <div class="col-12 col-sm-6 col-md-3">
+            <label for="dtpHasta" class="form-label fw-semibold" style="color: var(--color-text-main);">Hasta:</label>
+            <input type="date" id="dtpHasta" class="form-control hud-input hud-mono" value="@finDefault" />
+        </div>
+        <div class="col-12 col-sm-6 col-md-3">
+            <label for="cboFaccion" class="form-label fw-semibold" style="color: var(--color-text-main);">Facción:</label>
+            <select id="cboFaccion" class="form-select hud-input">
+                <option value="(Todos)" selected="@(faccionSeleccionada == "(Todos)")">(Todos)</option>
+                <option value="Militares" selected="@(faccionSeleccionada == "Militares")">Militares</option>
+                <option value="Mercenarios" selected="@(faccionSeleccionada == "Mercenarios")">Mercenarios</option>
+                <option value="Terroristas" selected="@(faccionSeleccionada == "Terroristas")">Terroristas</option>
+            </select>
+        </div>
+        <div class="col-12 col-sm-6 col-md-3 d-flex flex-wrap gap-2">
+            <button class="btn btn-hud-primary d-inline-flex align-items-center" type="button" onclick="ejecutarConsultaPeriodoPA2();">
+                <i data-lucide="search" class="me-1 icon-sm"></i>
+                <span>Consultar</span>
+            </button>
+            <button class="btn btn-hud-outline d-inline-flex align-items-center" id="btnExportarExcelPeriodo" type="button" onclick="exportarConsultaPeriodoExcel();" title="Descargar reporte formateado para Microsoft Excel">
+                <i data-lucide="file-spreadsheet" class="me-1 icon-sm"></i>
+                <span>Exportar a Excel</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Filtros rápidos de periodo -->
+    <div class="d-flex flex-wrap align-items-center gap-2 mt-3 pt-2 border-top border-secondary">
+        <span class="small text-muted align-self-center me-1">Periodos rápidos:</span>
+        <button type="button" class="btn btn-sm btn-hud-outline py-0 px-2 hud-mono" onclick="establecerRangoPeriodo('2026-07-01', '2026-10-31');">Todo el historial (15 registros)</button>
+        <button type="button" class="btn btn-sm btn-hud-outline py-0 px-2 hud-mono" onclick="establecerRangoPeriodo('2026-07-01', '2026-07-31');">Julio 2026 (3 solicitudes)</button>
+        <button type="button" class="btn btn-sm btn-hud-outline py-0 px-2 hud-mono" onclick="establecerRangoPeriodo('2026-08-01', '2026-08-31');">Agosto 2026 (4 solicitudes)</button>
+        <button type="button" class="btn btn-sm btn-hud-outline py-0 px-2 hud-mono" onclick="establecerRangoPeriodo('2026-09-01', '2026-09-30');">Septiembre 2026 (4 solicitudes)</button>
+        <button type="button" class="btn btn-sm btn-hud-outline py-0 px-2 hud-mono" onclick="establecerRangoPeriodo('2026-10-01', '2026-10-31');">Octubre 2026 (4 solicitudes)</button>
+    </div>
+</div>
+
+<!-- Tabla con las ocho columnas de la consulta -->
+<div class="hud-panel p-0 overflow-hidden mb-3">
+    <div class="table-responsive">
+        <table id="tablaConsultasPeriodo" class="table hud-table align-middle mb-0 tabla-solicitudes">
+            <thead>
+                <tr>
+                    <th>Fecha</th>
+                    <th>Jugador</th>
+                    <th>Rango</th>
+                    <th>Especialidad</th>
+                    <th class="text-end">Horas</th>
+                    <th>Facción</th>
+                    <th>Discord</th>
+                    <th>Disponibilidad</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td colspan="8" class="text-center text-muted py-5">
+                        <div class="d-flex flex-column align-items-center gap-2">
+                            <i data-lucide="filter" class="icon-lg text-muted" style="opacity: 0.6;"></i>
+                            <span>Cargando solicitudes registradas...</span>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Contador inferior -->
+<div class="hud-panel py-2 px-3 d-flex align-items-center justify-content-between">
+    <span class="fw-bold" style="color: var(--color-text-main);">Solicitudes encontradas: <span id="lblTotalConsultasPeriodo" class="hud-mono text-primary">0</span></span>
+    <span class="small text-muted hud-mono">CONSULTA INSTITUCIONAL</span>
+</div>
+
+@section Scripts {
+    <script>
+        // Colección de solicitudes en memoria sincronizada con la plataforma
+        window.todasLasSolicitudesPeriodo = [
+            @foreach (var i in ClanService.Integrantes.OrderBy(x => x.FechaIngreso).ThenBy(x => x.NumeroPA2))
+            {
+                <text>{
+                    id: @i.NumeroPA2,
+                    fecha: "@i.FechaIngreso.ToString("yyyy-MM-dd")",
+                    fechaFormato: "@i.FechaIngreso.ToString("dd/MM/yyyy")",
+                    jugador: "@Html.Raw(JavaScriptEncoder.Default.Encode(i.Alias))",
+                    rango: "@Html.Raw(JavaScriptEncoder.Default.Encode(i.Rango))",
+                    especialidad: "@Html.Raw(JavaScriptEncoder.Default.Encode(i.Especialidades.FirstOrDefault() ?? "Infantería"))",
+                    horas: @i.HorasMilsim,
+                    horasFormato: "@i.HorasMilsim.ToString("N0")",
+                    faccion: "@Html.Raw(JavaScriptEncoder.Default.Encode(i.Faccion))",
+                    discord: "@Html.Raw(JavaScriptEncoder.Default.Encode(i.Discord))",
+                    disponibilidad: "@Html.Raw(JavaScriptEncoder.Default.Encode(!string.IsNullOrEmpty(i.TurnoDisponibilidad) ? i.TurnoDisponibilidad : i.Disponibilidad))"
+                },</text>
+            }
+        ];
+
+        // Ejecutar consulta automáticamente al cargar para presentar los resultados de muestra
+        document.addEventListener("DOMContentLoaded", function () {
+            ejecutarConsultaPeriodoPA2();
+        });
+    </script>
+}

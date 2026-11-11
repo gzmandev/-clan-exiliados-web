@@ -1,0 +1,87 @@
+@model ClanExiliados_Web.Services.ClanInstitutionalService
+@{
+    ViewData["Title"] = "Unidades Tácticas Internas";
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div>
+        <div class="hud-kicker">MÓDULO 07.3 · FUERZAS OPERATIVAS (UE-001 A UE-005)</div>
+        <h2 class="hud-title mb-1 d-flex align-items-center">
+            <i data-lucide="shield" class="me-2" style="color: var(--color-primary); width: 26px; height: 26px;"></i>
+            <span>Unidades Tácticas Internas</span>
+        </h2>
+        <p class="text-secondary mb-0 small">
+            Agrupaciones operativas identificadas mediante el formato <span class="hud-mono" style="color: var(--color-primary);">UE-###</span>, con mando directo, doctrina e historial propio. Independientes de la asignación de facción.
+        </p>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-action="Departamentos" class="btn btn-hud-outline btn-sm d-inline-flex align-items-center">
+            <i data-lucide="layers" class="me-1"></i>
+            <span>Departamentos</span>
+        </a>
+        <a asp-controller="Operaciones" asp-action="Index" class="btn btn-hud-primary btn-sm d-inline-flex align-items-center">
+            <i data-lucide="crosshair" class="me-1"></i>
+            <span>Centro de Operaciones</span>
+        </a>
+    </div>
+</div>
+
+<div class="row g-4">
+    @foreach (var u in Model.Unidades)
+    {
+        var miembrosUnidad = Model.Integrantes.Where(i => u.IntegrantesCodigos.Contains(i.CodigoCE)).ToList();
+        <div class="col-xl-6">
+            <div class="hud-panel p-4 h-100">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+                    <div>
+                        <span class="hud-mono fw-bold me-2" style="color: var(--color-primary); font-size: 1.05rem;">@u.Id</span>
+                        <span class="hud-badge-neutral">DEPTO: @u.DepartamentoAsociado.ToUpperInvariant()</span>
+                    </div>
+                    <span class="hud-badge-active">@u.Estado.ToUpperInvariant() · Fundada @u.FechaCreacion.ToString("dd/MM/yyyy")</span>
+                </div>
+
+                <h4 class="hud-title mb-2" style="color: var(--text-primary);">@u.Nombre</h4>
+                <p class="small text-secondary mb-3">@u.Descripcion</p>
+
+                <div class="p-2 rounded mb-3 small" style="background: var(--bg-elevated); border: 1px solid var(--border-dark);">
+                    <span class="hud-mono text-secondary">LÍDER DE UNIDAD:</span>
+                    <strong class="ms-1" style="color: var(--color-alert); font-family: var(--font-display);">@u.Lider</strong>
+                </div>
+
+                <div class="row g-3 small mb-3">
+                    <div class="col-md-6">
+                        <div class="hud-mono text-secondary mb-1">ESPECIALIZACIÓN Y ACTIVIDADES</div>
+                        <ul class="ps-3 mb-0" style="color: var(--text-primary);">
+                            @foreach (var act in u.Actividades)
+                            {
+                                <li>@act</li>
+                            }
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="hud-mono text-secondary mb-1">HISTORIAL OPERATIVO RECIENTE</div>
+                        <ul class="ps-3 mb-0 text-secondary">
+                            @foreach (var h in u.Historial)
+                            {
+                                <li>@h</li>
+                            }
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="pt-3 border-top" style="border-color: var(--border-dark) !important;">
+                    <div class="hud-mono small text-secondary mb-2">DOTACIÓN DE LA UNIDAD (@miembrosUnidad.Count EFECTIVOS)</div>
+                    <div class="d-flex flex-wrap gap-2">
+                        @foreach (var m in miembrosUnidad)
+                        {
+                            <a asp-controller="Personal" asp-action="Expediente" asp-route-id="@m.CodigoCE"
+                               class="btn btn-hud-outline btn-sm py-1 px-2 d-inline-flex align-items-center">
+                                <span class="hud-mono me-1" style="color: var(--color-primary);">@m.CodigoCE</span> · @m.Alias <span class="text-secondary small ms-1">(@m.Rango)</span>
+                            </a>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>

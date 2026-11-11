@@ -1,0 +1,197 @@
+@model ClanExiliados_Web.Services.ClanInstitutionalService
+@{
+    ViewData["Title"] = "Calendario Institucional de Operaciones y Entrenamientos";
+    var vista = (ViewData["VistaCalendario"]?.ToString() ?? "mensual").ToLowerInvariant();
+    var filtroPlataforma = ViewData["FiltroPlataforma"]?.ToString() ?? "";
+    var filtroDepartamento = ViewData["FiltroDepartamento"]?.ToString() ?? "";
+    var filtroUnidad = ViewData["FiltroUnidad"]?.ToString() ?? "";
+    var filtroEstado = ViewData["FiltroEstado"]?.ToString() ?? "";
+
+    var ops = Model.Operaciones.AsEnumerable();
+    if (!string.IsNullOrEmpty(filtroPlataforma))
+        ops = ops.Where(o => o.Plataforma.Equals(filtroPlataforma, StringComparison.OrdinalIgnoreCase));
+    if (!string.IsNullOrEmpty(filtroDepartamento))
+        ops = ops.Where(o => o.DepartamentoResponsable.Equals(filtroDepartamento, StringComparison.OrdinalIgnoreCase));
+    if (!string.IsNullOrEmpty(filtroUnidad))
+        ops = ops.Where(o => o.Unidades.Any(u => u.Equals(filtroUnidad, StringComparison.OrdinalIgnoreCase)));
+    if (!string.IsNullOrEmpty(filtroEstado))
+        ops = ops.Where(o => o.Estado.Equals(filtroEstado, StringComparison.OrdinalIgnoreCase));
+
+    var listaOps = ops.OrderBy(o => o.Fecha).ToList();
+
+    // Detección de simultaneidad (misma fecha y mismo horario)
+    var gruposSimultaneos = Model.Operaciones
+        .GroupBy(o => new { Fecha = o.Fecha.Date, o.Horario })
+        .Where(g => g.Count() > 1)
+        .ToList();
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div>
+        <div class="hud-kicker">MÓDULO 12 · AGENDA TÁCTICA Y DETECCIÓN DE SIMULTANEIDAD</div>
+        <h2 class="hud-title mb-1">Calendario Institucional</h2>
+        <p class="text-secondary mb-0 small">
+            Cronograma unificado de operaciones y entrenamientos con vistas Mensual, Semanal y Diaria y alerta visual de actividades simultáneas.
+        </p>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-action="Calendario" asp-route-vista="mensual" class="btn btn-sm @(vista == "mensual" ? "btn-hud-primary" : "btn-hud-outline")">Vista Mensual</a>
+        <a asp-action="Calendario" asp-route-vista="semanal" class="btn btn-sm @(vista == "semanal" ? "btn-hud-primary" : "btn-hud-outline")">Vista Semanal</a>
+        <a asp-action="Calendario" asp-route-vista="diaria" class="btn btn-sm @(vista == "diaria" ? "btn-hud-primary" : "btn-hud-outline")">Vista Diaria</a>
+    </div>
+</div>
+
+<!-- ALERTA VISUAL DE SIMULTANEIDAD -->
+@if (Model.Configuracion.DeteccionSimultaneidadCalendario && gruposSimultaneos.Any())
+{
+    <div class="hud-panel p-3 mb-4" style="border-left: 4px solid #F59E0B; background: rgba(245, 158, 11, 0.08);">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <div>
+                <div class="hud-mono small fw-bold d-flex align-items-center gap-1" style="color: var(--color-alert);">
+                    <i data-lucide="alert-triangle" style="width: 14px; height: 14px;"></i>
+                    <span>DETECCIÓN DE SIMULTANEIDAD HORARIA ACTIVA</span>
+                </div>
+                @foreach (var g in gruposSimultaneos)
+                {
+                    <div class="small text-light mt-1">
+                        Coincidencia detectada el <strong class="hud-mono text-warning">@g.Key.Fecha.ToString("dd/MM/yyyy") (@g.Key.Horario)</strong> entre:
+                        @foreach (var item in g)
+                        {
+                            <span class="hud-badge hud-badge-warning ms-1">@item.Id · @item.Nombre (@item.Plataforma)</span>
+                        }
+                    </div>
+                }
+            </div>
+            <a asp-controller="Operaciones" asp-action="Index" class="btn btn-hud-outline btn-sm">Revisar Convocatorias</a>
+        </div>
+    </div>
+}
+
+<!-- FILTROS -->
+<form method="get" asp-action="Calendario" class="hud-panel p-3 mb-4">
+    <input type="hidden" name="vista" value="@vista" />
+    <div class="row g-2 align-items-end">
+        <div class="col-md-3">
+            <label class="form-label small hud-mono">PLATAFORMA</label>
+            <select name="plataforma" class="form-select form-select-sm hud-input">
+                <option value="">Todas</option>
+                <option value="Arma 3" selected="@(filtroPlataforma == "Arma 3")">Arma 3</option>
+                <option value="Arma Reforger" selected="@(filtroPlataforma == "Arma Reforger")">Arma Reforger</option>
+                <option value="GTA V / FiveM" selected="@(filtroPlataforma == "GTA V / FiveM")">GTA V / FiveM</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label small hud-mono">DEPARTAMENTO</label>
+            <select name="departamento" class="form-select form-select-sm hud-input">
+                <option value="">Todos</option>
+                @foreach (var d in Model.Departamentos)
+                {
+                    <option value="@d.Nombre" selected="@(filtroDepartamento == d.Nombre)">@d.Nombre</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label small hud-mono">UNIDAD</label>
+            <select name="unidad" class="form-select form-select-sm hud-input">
+                <option value="">Todas</option>
+                @foreach (var u in Model.Unidades)
+                {
+                    <option value="@u.Id" selected="@(filtroUnidad == u.Id)">@u.Id · @u.Nombre</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-3 d-flex gap-2">
+            <button type="submit" class="btn btn-hud-primary btn-sm flex-grow-1">Filtrar</button>
+            <a asp-action="Calendario" asp-route-vista="@vista" class="btn btn-hud-outline btn-sm">Limpiar</a>
+        </div>
+    </div>
+</form>
+
+<!-- CONTENIDO SEGÚN VISTA (MENSUAL / SEMANAL / DIARIA) -->
+<div class="hud-panel p-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="hud-title mb-0">
+            @if (vista == "mensual")
+            {
+                <span> Matriz Mensual de Operaciones y Entrenamientos</span>
+            }
+            else if (vista == "semanal")
+            {
+                <span> Cronograma Semanal Táctico (Próximos 7 Días)</span>
+            }
+            else
+            {
+                <span> Agenda Diaria Detallada por Franja Horaria</span>
+            }
+        </h5>
+        <span class="hud-mono small text-secondary">@listaOps.Count OPERACIONES · @Model.Entrenamientos.Count ENTRENAMIENTOS</span>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table hud-table align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>FECHA</th>
+                    <th>HORARIO</th>
+                    <th>CÓDIGO</th>
+                    <th>ACTIVIDAD / OPERACIÓN</th>
+                    <th>PLATAFORMA</th>
+                    <th>DEPTO. / UNIDADES</th>
+                    <th>RESPONSABLE</th>
+                    <th>ESTADO / SIMULTANEIDAD</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var op in listaOps)
+                {
+                    var esSimultanea = Model.Operaciones.Count(x => x.Fecha.Date == op.Fecha.Date && x.Horario == op.Horario) > 1;
+                    <tr style="@(esSimultanea ? "background: rgba(245,158,11,0.08);" : "")">
+                        <td class="hud-mono fw-bold text-light">@op.Fecha.ToString("dd/MM/yyyy")</td>
+                        <td class="hud-mono text-info">@op.Horario</td>
+                        <td class="hud-mono text-success fw-bold">@op.Id</td>
+                        <td>
+                            <div class="fw-bold text-light">@op.Nombre</div>
+                            <div class="small text-secondary">@op.Descripcion</div>
+                        </td>
+                        <td><span class="hud-badge hud-badge-neutral">@op.Plataforma</span></td>
+                        <td>
+                            <span class="text-warning small">@op.DepartamentoResponsable</span>
+                            <div class="hud-mono small text-success">@string.Join(", ", op.Unidades)</div>
+                        </td>
+                        <td class="small text-light">@op.Responsable</td>
+                        <td>
+                            <span class="hud-badge @(op.Estado == "En curso" ? "hud-badge-danger" : op.Estado == "Programada" ? "hud-badge-info" : "hud-badge-success")">
+                                @op.Estado
+                            </span>
+                            @if (esSimultanea)
+                            {
+                                <div class="mt-1">
+                                    <span class="hud-badge-alert">
+                                        <i data-lucide="alert-triangle" style="width: 12px; height: 12px; display: inline-block; vertical-align: -1px;"></i>
+                                        <span>SIMULTÁNEA</span>
+                                    </span>
+                                </div>
+                            }
+                        </td>
+                    </tr>
+                }
+                @foreach (var ent in Model.Entrenamientos.OrderBy(e => e.Fecha))
+                {
+                    <tr>
+                        <td class="hud-mono text-light">@ent.Fecha.ToString("dd/MM/yyyy")</td>
+                        <td class="hud-mono text-info">@ent.Horario</td>
+                        <td class="hud-mono text-warning fw-bold">@ent.Id</td>
+                        <td>
+                            <div class="fw-bold text-light">[ENTRENAMIENTO] @ent.Nombre</div>
+                            <div class="small text-secondary">Categoría: @ent.Categoria · @ent.Descripcion</div>
+                        </td>
+                        <td><span class="hud-badge hud-badge-neutral">@ent.Plataforma</span></td>
+                        <td class="hud-mono small text-success">@string.Join(", ", ent.Unidades)</td>
+                        <td class="small text-light">@ent.Instructor</td>
+                        <td><span class="hud-badge hud-badge-info">@ent.Estado</span></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

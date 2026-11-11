@@ -1,0 +1,100 @@
+@model ClanExiliados_Web.Services.ClanInstitutionalService
+@{
+    ViewData["Title"] = "Centro de Configuración Institucional";
+    var cfg = Model.Configuracion;
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div>
+        <div class="hud-kicker">MÓDULO 26 · PARÁMETROS GLOBALES Y CATÁLOGOS INSTITUCIONALES</div>
+        <h2 class="hud-title mb-1">Centro de Configuración Institucional</h2>
+        <p class="text-secondary mb-0 small">
+            Administración de la identidad visual, lemas, canales de comunicación y reglas operativas de la plataforma. Todo cambio queda asentado en el Registro de Auditoría (<span class="hud-mono text-warning">AUD-###</span>).
+        </p>
+    </div>
+    <a asp-controller="Gobernanza" asp-action="Archivo" asp-route-pestana="auditoria" class="btn btn-hud-outline btn-sm">
+        Ver Bitácora de Auditoría
+    </a>
+</div>
+
+<div class="row g-4">
+    <div class="col-xl-7">
+        <div class="hud-panel p-4">
+            <h4 class="hud-title mb-3">Parámetros Institucionales Editables en Memoria</h4>
+            <form asp-action="GuardarConfiguracion" method="post">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label small hud-mono">NOMBRE INSTITUCIONAL OFICIAL</label>
+                        <input type="text" class="form-control hud-input" value="@cfg.NombreInstitucional" readonly />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small hud-mono">MONOGRAMA Y VERSIÓN</label>
+                        <input type="text" class="form-control hud-input" value="@cfg.Monograma · @cfg.VersionPlataforma" readonly />
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small hud-mono">LEMA INSTITUCIONAL ACTIVO</label>
+                        <input type="text" name="lema" class="form-control hud-input" value="@cfg.LemaInstitucional" required />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small hud-mono">CANAL OFICIAL DE DISCORD</label>
+                        <input type="text" name="canalDiscord" class="form-control hud-input" value="@cfg.CanalContactoDiscord" required />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small hud-mono">PALETA VISUAL ACTIVA</label>
+                        <input type="text" class="form-control hud-input" value="@cfg.PaletaActiva" readonly />
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="form-check form-switch mt-2">
+                            <input class="form-check-input" type="checkbox" id="chkAlertas" name="alertasActivas" value="true" checked="@cfg.AlertasTiempoRealActivas" />
+                            <label class="form-check-label small text-light" for="chkAlertas">
+                                Activar Panel de Alertas Dinámicas en Tiempo Real
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-check form-switch mt-2">
+                            <input class="form-check-input" type="checkbox" id="chkSimultaneidad" name="simultaneidadActiva" value="true" checked="@cfg.DeteccionSimultaneidadCalendario" />
+                            <label class="form-check-label small text-light" for="chkSimultaneidad">
+                                Detectar Simultaneidad Horaria en Calendario
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="col-12 pt-2">
+                        <button type="submit" class="btn btn-hud-primary">
+                            Guardar Configuración y Registrar en Auditoría
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="col-xl-5">
+        <div class="hud-panel p-4 h-100">
+            <h4 class="hud-title mb-3">Catálogos Oficiales Sincronizados</h4>
+            <div class="d-flex flex-column gap-3 small">
+                <div class="p-3 rounded" style="background: rgba(16,23,20,0.88); border: 1px solid rgba(255,255,255,0.07);">
+                    <div class="hud-mono text-success fw-bold">8 RANGOS OFICIALES</div>
+                    <div class="text-light mt-1">@string.Join(" · ", Model.Rangos.OrderBy(r => r.Orden).Select(r => r.Nombre))</div>
+                </div>
+                <div class="p-3 rounded" style="background: rgba(16,23,20,0.88); border: 1px solid rgba(255,255,255,0.07);">
+                    <div class="hud-mono text-warning fw-bold">5 DEPARTAMENTOS INSTITUCIONALES</div>
+                    <div class="text-light mt-1">@string.Join(" · ", Model.Departamentos.Select(d => d.Nombre))</div>
+                </div>
+                <div class="p-3 rounded" style="background: rgba(16,23,20,0.88); border: 1px solid rgba(255,255,255,0.07);">
+                    <div class="hud-mono text-info fw-bold">5 UNIDADES TÁCTICAS (UE-001 A UE-005)</div>
+                    <div class="text-light mt-1">@string.Join(" · ", Model.Unidades.Select(u => u.Id))</div>
+                </div>
+                <div class="p-3 rounded" style="background: rgba(16,23,20,0.88); border: 1px solid rgba(255,255,255,0.07);">
+                    <div class="hud-mono text-light fw-bold">3 FACCIONES OFICIALES Y 3 PLATAFORMAS</div>
+                    <div class="text-secondary mt-1">
+                        Facciones: <strong class="text-light">Militares, Mercenarios, Terroristas</strong><br />
+                        Plataformas: <strong class="text-light">Arma 3, Arma Reforger, GTA V / FiveM</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

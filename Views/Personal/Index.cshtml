@@ -1,0 +1,235 @@
+@model List<IntegranteCE>
+@inject ClanInstitutionalService ClanService
+@{
+    ViewData["Title"] = "Personal y Expedientes CE";
+    var vistaActiva = ViewData["VistaActiva"]?.ToString() ?? "tarjetas";
+    var q = ViewData["FiltroQ"]?.ToString() ?? "";
+    var fRango = ViewData["FiltroRango"]?.ToString() ?? "";
+    var fDepto = ViewData["FiltroDepartamento"]?.ToString() ?? "";
+    var fUnidad = ViewData["FiltroUnidad"]?.ToString() ?? "";
+    var fEstado = ViewData["FiltroEstado"]?.ToString() ?? "";
+    var fDisp = ViewData["FiltroDisponibilidad"]?.ToString() ?? "";
+}
+
+<div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center mb-3 gap-2">
+    <div>
+        <h2 class="titulo-negocio mb-0 d-flex align-items-center">
+            <i data-lucide="users" class="me-2" style="color: var(--color-primary); width: 26px; height: 26px;"></i>
+            <span>Personal, Escalafón y Expedientes CE</span>
+        </h2>
+        <p class="text-muted mb-0 small">Directorio institucional con vistas conmutables: Tarjetas operativas Tactical HUD y Tabla institucional.</p>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+        <a asp-action="Index" asp-route-vista="tarjetas" asp-route-q="@q" asp-route-rango="@fRango" asp-route-departamento="@fDepto" asp-route-unidad="@fUnidad" asp-route-estado="@fEstado" asp-route-disponibilidad="@fDisp"
+           class="btn btn-sm d-inline-flex align-items-center @(vistaActiva == "tarjetas" ? "btn-hud-primary" : "btn-hud-outline")">
+            <i data-lucide="layout-grid" class="me-1"></i>
+            <span>Vista Tarjetas</span>
+        </a>
+        <a asp-action="Index" asp-route-vista="tabla" asp-route-q="@q" asp-route-rango="@fRango" asp-route-departamento="@fDepto" asp-route-unidad="@fUnidad" asp-route-estado="@fEstado" asp-route-disponibilidad="@fDisp"
+           class="btn btn-sm d-inline-flex align-items-center @(vistaActiva == "tabla" ? "btn-hud-primary" : "btn-hud-outline")">
+            <i data-lucide="table" class="me-1"></i>
+            <span>Vista Tabla</span>
+        </a>
+        <a asp-controller="Reclutamiento" asp-action="Index" class="btn btn-sm btn-hud-outline d-inline-flex align-items-center">
+            <i data-lucide="user-plus" class="me-1"></i>
+            <span>Incorporar Aspirante</span>
+        </a>
+    </div>
+</div>
+
+<!-- Filtros avanzados: Nombre/Alias/Código CE, Rango, Departamento, Unidad, Estado y Disponibilidad -->
+<div class="hud-panel p-3 mb-4">
+    <form asp-action="Index" method="get">
+        <input type="hidden" name="vista" value="@vistaActiva" />
+        <div class="row g-2 align-items-end">
+            <div class="col-12 col-md-4 col-lg-3">
+                <label class="form-label small fw-semibold" style="color: var(--text-primary);">Buscar (Nombre / Alias / CE-### / Discord):</label>
+                <input type="text" name="q" value="@q" class="form-control form-control-sm hud-input" placeholder="Ej. Paquito, CE-001, Wolf..." />
+            </div>
+            <div class="col-6 col-md-4 col-lg-2">
+                <label class="form-label small fw-semibold" style="color: var(--text-primary);">Rango Oficial:</label>
+                <select name="rango" class="form-select form-select-sm hud-input">
+                    <option value="">(Todos los rangos)</option>
+                    @foreach (var r in ClanService.Rangos)
+                    {
+                        <option value="@r.Nombre" selected="@(fRango == r.Nombre)">@r.Nombre</option>
+                    }
+                </select>
+            </div>
+            <div class="col-6 col-md-4 col-lg-2">
+                <label class="form-label small fw-semibold" style="color: var(--text-primary);">Departamento:</label>
+                <select name="departamento" class="form-select form-select-sm hud-input">
+                    <option value="">(Todos)</option>
+                    @foreach (var d in ClanService.Departamentos)
+                    {
+                        <option value="@d.Nombre" selected="@(fDepto == d.Nombre)">@d.Nombre</option>
+                    }
+                </select>
+            </div>
+            <div class="col-6 col-md-4 col-lg-2">
+                <label class="form-label small fw-semibold" style="color: var(--text-primary);">Unidad Táctica:</label>
+                <select name="unidad" class="form-select form-select-sm hud-input">
+                    <option value="">(Todas)</option>
+                    @foreach (var u in ClanService.Unidades)
+                    {
+                        <option value="@u.Id" selected="@(fUnidad == u.Id)">@u.Id · @u.Nombre.Split('«')[0]</option>
+                    }
+                </select>
+            </div>
+            <div class="col-6 col-md-4 col-lg-1">
+                <label class="form-label small fw-semibold" style="color: var(--text-primary);">Estado Inst.:</label>
+                <select name="estado" class="form-select form-select-sm hud-input">
+                    <option value="">(Todos)</option>
+                    @foreach (var est in new[] { "Activo", "En reserva", "Suspendido", "Retirado" })
+                    {
+                        <option value="@est" selected="@(fEstado == est)">@est</option>
+                    }
+                </select>
+            </div>
+            <div class="col-6 col-md-4 col-lg-1">
+                <label class="form-label small fw-semibold" style="color: var(--text-primary);">Disponib.:</label>
+                <select name="disponibilidad" class="form-select form-select-sm hud-input">
+                    <option value="">(Todas)</option>
+                    @foreach (var dsp in new[] { "Disponible", "Ocupado", "Desconectado", "No disponible" })
+                    {
+                        <option value="@dsp" selected="@(fDisp == dsp)">@dsp</option>
+                    }
+                </select>
+            </div>
+            <div class="col-6 col-md-4 col-lg-1 d-flex gap-1">
+                <button type="submit" class="btn btn-sm btn-hud-primary w-100 d-inline-flex align-items-center justify-content-center">
+                    <i data-lucide="filter" style="width: 14px; height: 14px;"></i>
+                </button>
+                <a asp-action="Index" asp-route-vista="@vistaActiva" class="btn btn-sm btn-hud-outline d-inline-flex align-items-center justify-content-center" title="Limpiar filtros">
+                    <i data-lucide="rotate-ccw" style="width: 14px; height: 14px;"></i>
+                </a>
+            </div>
+        </div>
+    </form>
+</div>
+
+@if (vistaActiva == "tabla")
+{
+    <!-- VISTA 2: TABLA INSTITUCIONAL -->
+    <div class="hud-panel p-0 overflow-hidden mb-3">
+        <div class="table-responsive">
+            <table class="table hud-table align-middle mb-0 tabla-solicitudes">
+                <thead>
+                    <tr>
+                        <th>N.º</th>
+                        <th>Fecha</th>
+                        <th>Jugador</th>
+                        <th>Rango</th>
+                        <th>Especialidad</th>
+                        <th class="text-end">Horas</th>
+                        <th>Facción oficial</th>
+                        <th>Discord</th>
+                        <th>Código CE / Estado</th>
+                        <th class="text-end">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var i in Model)
+                    {
+                        var facClass = i.Faccion == "Militares" ? "badge-militares" : (i.Faccion == "Mercenarios" ? "badge-mercenarios" : "badge-terroristas");
+                        <tr>
+                            <td class="hud-mono" style="color: var(--color-primary);">@i.NumeroPA2</td>
+                            <td class="hud-mono">@i.FechaIngreso.ToString("dd/MM/yyyy")</td>
+                            <td>
+                                <strong style="color: var(--text-primary);">@i.Alias</strong>
+                                <small class="text-muted d-block">@i.Nombre</small>
+                            </td>
+                            <td><span class="hud-badge-neutral">@i.Rango</span></td>
+                            <td>@string.Join(", ", i.Especialidades)</td>
+                            <td class="text-end hud-mono">@i.HorasMilsim.ToString("N0")</td>
+                            <td><span class="badge @facClass">@i.Faccion</span></td>
+                            <td><code class="hud-mono">@i.Discord</code></td>
+                            <td>
+                                <span class="badge hud-mono" style="background: var(--bg-main); border: 1px solid var(--color-primary); color: var(--color-primary);">@i.CodigoCE</span>
+                                <span class="badge hud-mono" style="background: var(--bg-elevated); border: 1px solid var(--border-dark); color: var(--text-secondary);">@i.EstadoInstitucional</span>
+                            </td>
+                            <td class="text-end">
+                                <button type="button" class="btn btn-sm btn-hud-outline me-1"
+                                        onclick="abrirVistaPreviaIntegrante('@i.CodigoCE','@i.Alias','@i.Nombre','@i.Rango','@i.Faccion','@string.Join(", ", i.Departamentos)','@string.Join(", ", i.Unidades)','@i.HorasMilsim','@i.EstadoInstitucional','@i.Disponibilidad','@i.Discord');">
+                                    <i data-lucide="eye" style="width: 14px; height: 14px;"></i>
+                                </button>
+                                <a asp-action="Expediente" asp-route-id="@i.CodigoCE" class="btn btn-sm btn-hud-primary me-1">
+                                    Expediente
+                                </a>
+                                <a asp-action="Credencial" asp-route-id="@i.CodigoCE" class="btn btn-sm btn-hud-outline">
+                                    Credencial
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+else
+{
+    <!-- VISTA 1: TARJETAS VISUALES TACTICAL HUD -->
+    <div class="row g-3 mb-3">
+        @foreach (var i in Model)
+        {
+            var dotClass = i.Disponibilidad == "Disponible" ? "dot-disponible" : (i.Disponibilidad == "Ocupado" ? "dot-ocupado" : (i.Disponibilidad == "Desconectado" ? "dot-desconectado" : "dot-nodisponible"));
+            var facClass = i.Faccion == "Militares" ? "badge-militares" : (i.Faccion == "Mercenarios" ? "badge-mercenarios" : "badge-terroristas");
+            <div class="col-12 col-md-6 col-xl-4">
+                <div class="hud-panel p-3 h-100 d-flex flex-column justify-content-between">
+                    <div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="hud-mono fw-bold" style="color: var(--color-primary); font-size: 0.95rem; letter-spacing: 1px;">@i.CodigoCE</span>
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="badge @facClass">@i.Faccion</span>
+                                <span class="small text-muted"><span class="status-dot @dotClass"></span>@i.Disponibilidad</span>
+                            </div>
+                        </div>
+                        <h5 class="fw-bold mb-0" style="color: var(--text-primary); font-family: var(--font-display);">@i.Alias <small class="fw-normal" style="color: var(--color-alert);">· @i.Rango</small></h5>
+                        <p class="text-muted small mb-2">@i.Nombre · <code class="hud-mono">@i.Discord</code> · @i.Edad años</p>
+
+                        <div class="small mb-2" style="color: var(--text-primary);">
+                            <div><strong style="color: var(--text-secondary);">Departamentos:</strong> @string.Join(", ", i.Departamentos)</div>
+                            <div><strong style="color: var(--text-secondary);">Unidades:</strong> @string.Join(", ", i.Unidades)</div>
+                            <div><strong style="color: var(--text-secondary);">Especialidades:</strong> @string.Join(", ", i.Especialidades)</div>
+                            <div><strong style="color: var(--text-secondary);">Experiencia:</strong> <span class="hud-mono">@i.HorasMilsim.ToString("N0")</span> h MILSIM · Turno: @i.TurnoDisponibilidad</div>
+                        </div>
+
+                        <div class="d-flex flex-wrap gap-1 mb-3">
+                            <span class="badge hud-mono" style="background: var(--bg-elevated); border: 1px solid var(--border-dark); color: @(i.EstadoInstitucional == "Activo" ? "var(--color-primary)" : "var(--color-alert)");">
+                                Estado: @i.EstadoInstitucional
+                            </span>
+                            @foreach (var ins in i.InsigniasAdministrativas.Take(2))
+                            {
+                                <span class="badge hud-mono" style="background: var(--bg-main); border: 1px solid var(--border-dark); color: var(--text-secondary);">
+                                    @ins
+                                </span>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2 pt-2" style="border-top: 1px solid var(--border-dark);">
+                        <button type="button" class="btn btn-sm btn-hud-outline d-inline-flex align-items-center"
+                                onclick="abrirVistaPreviaIntegrante('@i.CodigoCE','@i.Alias','@i.Nombre','@i.Rango','@i.Faccion','@string.Join(", ", i.Departamentos)','@string.Join(", ", i.Unidades)','@i.HorasMilsim','@i.EstadoInstitucional','@i.Disponibilidad','@i.Discord');">
+                            <i data-lucide="eye" class="me-1" style="width: 14px; height: 14px;"></i>
+                            <span>Vista previa</span>
+                        </button>
+                        <a asp-action="Expediente" asp-route-id="@i.CodigoCE" class="btn btn-sm btn-hud-primary flex-grow-1 d-inline-flex align-items-center justify-content-center">
+                            <i data-lucide="folder" class="me-1" style="width: 14px; height: 14px;"></i>
+                            <span>Expediente</span>
+                        </a>
+                        <a asp-action="Credencial" asp-route-id="@i.CodigoCE" class="btn btn-sm btn-hud-outline d-inline-flex align-items-center">
+                            <i data-lucide="credit-card" class="me-1" style="width: 14px; height: 14px;"></i>
+                            <span>Credencial</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+<div class="hud-panel py-2 px-3 d-flex flex-column flex-sm-row justify-content-between align-items-sm-center small gap-2">
+    <span><strong style="color: var(--text-primary);">Total de efectivos mostrados: <span class="hud-mono" style="color: var(--color-primary);">@Model.Count</span></strong> (de @ClanService.Integrantes.Count registrados en memoria)</span>
+    <span class="text-muted hud-mono">ESTADO: Efectivos activos y operativos en plataforma</span>
+</div>

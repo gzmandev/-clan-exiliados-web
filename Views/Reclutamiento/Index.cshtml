@@ -1,0 +1,462 @@
+@model ClanExiliados_Web.Services.ClanInstitutionalService
+@{
+    ViewData["Title"] = "Reclutamiento, Evaluación (+18) e Incorporación";
+    var filtroEstado = (ViewData["FiltroEstado"]?.ToString() ?? "").Trim();
+    var solicitudes = Model.SolicitudesReclutamiento.AsEnumerable();
+    if (!string.IsNullOrEmpty(filtroEstado))
+    {
+        solicitudes = solicitudes.Where(s => s.EstadoAdmision.Equals(filtroEstado, StringComparison.OrdinalIgnoreCase));
+    }
+    var lista = solicitudes.ToList();
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div>
+        <div class="hud-kicker">MÓDULO 08 · ADMISIÓN E INCORPORACIÓN AUTOMÁTICA EN MEMORIA</div>
+        <h2 class="hud-title mb-1">Centro de Reclutamiento e Incorporación Institucional</h2>
+        <p class="text-secondary mb-0 small">
+            Flujo oficial: Registro de Aspirante → Verificación Obligatoria de Mayoría de Edad (+18) → Evaluación Técnica → Entrevista → Decisión e Incorporación (<span class="hud-mono text-success">CE-###</span>).
+        </p>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+        <a asp-controller="Solicitudes" asp-action="Nuevo" class="btn btn-hud-outline btn-sm">
+            Nueva Solicitud (/Solicitudes/Nuevo)
+        </a>
+        <button type="button" class="btn btn-hud-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalRegistrarAspirante">
+            + Registrar Aspirante (+18)
+        </button>
+    </div>
+</div>
+
+<!-- PIPELINE DE ETAPAS DEL FLUJO -->
+<div class="row g-3 mb-4">
+    <div class="col-md-2 col-6">
+        <div class="hud-panel p-3 h-100 border-start border-3 border-secondary">
+            <div class="hud-mono small text-secondary">ETAPA 01</div>
+            <div class="fw-bold text-light">1. Registro</div>
+            <div class="small text-secondary mt-1">Recepción de ficha MILSIM / RP y Discord.</div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="hud-panel p-3 h-100 border-start border-3 border-warning">
+            <div class="hud-mono small text-warning">ETAPA 02 · FILTRO EXCLUYENTE</div>
+            <div class="fw-bold text-light">2. Mayoría de Edad (+18)</div>
+            <div class="small text-secondary mt-1">Rechazo automático si la edad declarada es menor a 18 años.</div>
+        </div>
+    </div>
+    <div class="col-md-2 col-6">
+        <div class="hud-panel p-3 h-100 border-start border-3 border-info">
+            <div class="hud-mono small text-info">ETAPA 03</div>
+            <div class="fw-bold text-light">3. Evaluación</div>
+            <div class="small text-secondary mt-1">Análisis de experiencia y antecedentes RP.</div>
+        </div>
+    </div>
+    <div class="col-md-2 col-6">
+        <div class="hud-panel p-3 h-100 border-start border-3 border-primary">
+            <div class="hud-mono small text-primary">ETAPA 04</div>
+            <div class="fw-bold text-light">4. Entrevista</div>
+            <div class="small text-secondary mt-1">Entrevista táctica y doctrina institucional.</div>
+        </div>
+    </div>
+    <div class="col-md-3 col-12">
+        <div class="hud-panel p-3 h-100 border-start border-3 border-success">
+            <div class="hud-mono small text-success">ETAPA 05 · ALTA AUTOMÁTICA</div>
+            <div class="fw-bold text-light">5. Decisión y Ceremonia CE</div>
+            <div class="small text-secondary mt-1">Genera expediente <span class="hud-mono">CE-###</span>, credencial y registro en Archivo.</div>
+        </div>
+    </div>
+</div>
+
+<!-- FILTROS POR ESTADO -->
+<div class="hud-panel p-3 mb-4 d-flex flex-wrap justify-content-between align-items-center gap-2">
+    <div class="d-flex flex-wrap gap-2 align-items-center">
+        <span class="hud-mono small text-secondary me-2">FILTRAR POR ESTADO:</span>
+        <a asp-action="Index" asp-route-estado="" class="btn btn-sm @(string.IsNullOrEmpty(filtroEstado) ? "btn-hud-primary" : "btn-hud-outline")">
+            Todas (@Model.SolicitudesReclutamiento.Count)
+        </a>
+        <a asp-action="Index" asp-route-estado="Pendiente" class="btn btn-sm @(filtroEstado == "Pendiente" ? "btn-hud-primary" : "btn-hud-outline")">
+            Pendientes (@Model.SolicitudesReclutamiento.Count(s => s.EstadoAdmision == "Pendiente"))
+        </a>
+        <a asp-action="Index" asp-route-estado="En revisión" class="btn btn-sm @(filtroEstado == "En revisión" ? "btn-hud-primary" : "btn-hud-outline")">
+            En Revisión (@Model.SolicitudesReclutamiento.Count(s => s.EstadoAdmision == "En revisión"))
+        </a>
+        <a asp-action="Index" asp-route-estado="Aprobada" class="btn btn-sm @(filtroEstado == "Aprobada" ? "btn-hud-primary" : "btn-hud-outline")">
+            Aprobadas (@Model.SolicitudesReclutamiento.Count(s => s.EstadoAdmision == "Aprobada"))
+        </a>
+        <a asp-action="Index" asp-route-estado="Rechazada" class="btn btn-sm @(filtroEstado == "Rechazada" ? "btn-hud-primary" : "btn-hud-outline")">
+            Rechazadas (@Model.SolicitudesReclutamiento.Count(s => s.EstadoAdmision == "Rechazada"))
+        </a>
+    </div>
+    <div class="small hud-mono text-secondary">
+        REGLA ACTIVA: <span class="text-warning">EDAD MÍNIMA OBLIGATORIA ≥ 18 AÑOS</span>
+    </div>
+</div>
+
+<!-- LISTADO DE SOLICITUDES DE RECLUTAMIENTO -->
+<div class="row g-3">
+    @foreach (var sol in lista)
+    {
+        var badgeEstado = sol.EstadoAdmision switch
+        {
+            "Aprobada" => "hud-badge-success",
+            "En revisión" => "hud-badge-info",
+            "Rechazada" => "hud-badge-danger",
+            _ => "hud-badge-warning"
+        };
+
+        <div class="col-12">
+            <div class="hud-panel p-3">
+                <div class="row g-3 align-items-center">
+                    <div class="col-lg-4">
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <span class="hud-mono fw-bold text-success">@sol.Id</span>
+                            <span class="hud-badge @badgeEstado">@sol.EstadoAdmision.ToUpperInvariant()</span>
+                            <span class="hud-badge hud-badge-neutral">Etapa: @sol.EtapaFlujo</span>
+                            @if (sol.Edad >= 18)
+                            {
+                                <span class="hud-badge hud-badge-success">+18 (@sol.Edad años)</span>
+                            }
+                            else
+                            {
+                                <span class="hud-badge hud-badge-danger">MENOR DE EDAD (@sol.Edad años · RECHAZO +18)</span>
+                            }
+                        </div>
+                        <h5 class="mb-1 text-light fw-bold">
+                            @sol.Alias <span class="text-secondary fw-normal small">(@sol.Nombre)</span>
+                        </h5>
+                        <div class="small text-secondary d-flex flex-wrap gap-3">
+                            <span>Discord: <strong class="hud-mono text-light">@sol.Discord</strong></span>
+                            <span>Facción: <strong class="text-light">@sol.Faccion</strong></span>
+                            <span>Disponibilidad: <strong class="text-light">@sol.DisponibilidadPA2</strong></span>
+                            <span>Horas MILSIM: <strong class="hud-mono text-warning">@sol.HorasMilsim h</strong></span>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-5">
+                        <div class="row g-2 small">
+                            <div class="col-sm-6">
+                                <div class="text-secondary hud-mono">PLATAFORMAS Y ESPECIALIDADES</div>
+                                <div class="text-light">@string.Join(", ", sol.Plataformas) · <span class="text-success">@string.Join(", ", sol.Especialidades)</span></div>
+                                <div class="text-secondary mt-1">Servidores previos: <span class="text-light">@sol.ServidoresAnteriores</span></div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="text-secondary hud-mono">EVALUACIÓN Y ENTREVISTA</div>
+                                <div class="text-light">@sol.CriteriosEvaluacion</div>
+                                <div class="text-secondary mt-1">Entrevista: <span class="text-info">@sol.EntrevistaFicticia</span></div>
+                            </div>
+                            <div class="col-12">
+                                <div class="p-2 rounded" style="background: rgba(16,23,20,0.75); border: 1px solid rgba(255,255,255,0.06);">
+                                    <span class="hud-mono text-secondary">DICTAMEN / OBSERVACIONES:</span>
+                                    <span class="text-light ms-1">@sol.ObservacionesEvaluacion</span>
+                                    <span class="hud-mono text-warning ms-2">[@sol.DecisionInstitucional]</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-3 text-lg-end">
+                        @if (sol.Incorporado && !string.IsNullOrEmpty(sol.CodigoCEAsignado))
+                        {
+                            <div class="mb-2">
+                                <span class="hud-badge hud-badge-success">INCORPORADO: @sol.CodigoCEAsignado</span>
+                            </div>
+                            <div class="d-flex flex-wrap justify-content-lg-end gap-2">
+                                <a asp-action="Ceremonia" asp-route-id="@sol.CodigoCEAsignado" class="btn btn-hud-primary btn-sm">
+                                    Ver Ceremonia CE
+                                </a>
+                                <a asp-controller="Personal" asp-action="Expediente" asp-route-id="@sol.CodigoCEAsignado" class="btn btn-hud-outline btn-sm">
+                                    Expediente @sol.CodigoCEAsignado
+                                </a>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="d-flex flex-wrap justify-content-lg-end gap-2">
+                                <button type="button" class="btn btn-hud-outline btn-sm"
+                                        data-bs-toggle="modal" data-bs-target="#modalEvaluar_@sol.Id">
+                                    Evaluar / Entrevistar
+                                </button>
+                                @if (sol.Edad >= 18 && sol.EstadoAdmision != "Rechazada")
+                                {
+                                    <button type="button" class="btn btn-hud-primary btn-sm"
+                                            data-bs-toggle="modal" data-bs-target="#modalIncorporar_@sol.Id">
+                                        Incorporar (Emitir CE-###)
+                                    </button>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL EVALUAR SOLICITUD -->
+        <div class="modal fade" id="modalEvaluar_@sol.Id" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content hud-modal">
+                    <form asp-action="Evaluar" method="post">
+                        <input type="hidden" name="idSolicitud" value="@sol.Id" />
+                        <div class="modal-header border-secondary">
+                            <h5 class="modal-title hud-title">Evaluación y Entrevista — @sol.Id (@sol.Alias)</h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            @if (sol.Edad < 18)
+                            {
+                                <div class="alert alert-danger py-2 small">
+                                    <strong>Restricción Estatutaria (+18):</strong> El aspirante declaró <strong>@sol.Edad años</strong>. El sistema impide aprobar solicitudes de menores de 18 años.
+                                </div>
+                            }
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label small hud-mono">ETAPA DEL FLUJO</label>
+                                    <select name="etapa" class="form-select hud-input">
+                                        <option value="Registro" selected="@(sol.EtapaFlujo == "Registro")">1. Registro</option>
+                                        <option value="Verificación de edad" selected="@(sol.EtapaFlujo == "Verificación de edad")">2. Verificación de edad (+18)</option>
+                                        <option value="Evaluación" selected="@(sol.EtapaFlujo == "Evaluación")">3. Evaluación técnica</option>
+                                        <option value="Entrevista" selected="@(sol.EtapaFlujo == "Entrevista")">4. Entrevista táctica</option>
+                                        <option value="Decisión" selected="@(sol.EtapaFlujo == "Decisión")">5. Decisión institucional</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small hud-mono">ESTADO DE ADMISIÓN</label>
+                                    <select name="nuevoEstado" class="form-select hud-input">
+                                        <option value="Pendiente" selected="@(sol.EstadoAdmision == "Pendiente")">Pendiente</option>
+                                        <option value="En revisión" selected="@(sol.EstadoAdmision == "En revisión")">En revisión</option>
+                                        <option value="Aprobada" selected="@(sol.EstadoAdmision == "Aprobada")">Aprobada (Apto +18)</option>
+                                        <option value="Rechazada" selected="@(sol.EstadoAdmision == "Rechazada")">Rechazada</option>
+                                    </select>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label small hud-mono">ENTREVISTA FICTICIA / EVALUACIÓN DE DISCORD</label>
+                                    <input type="text" name="entrevista" class="form-control hud-input" value="@sol.EntrevistaFicticia" />
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label small hud-mono">OBSERVACIONES DE EVALUACIÓN</label>
+                                    <textarea name="observaciones" rows="2" class="form-control hud-input">@sol.ObservacionesEvaluacion</textarea>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label small hud-mono">DECISIÓN INSTITUCIONAL</label>
+                                    <input type="text" name="decision" class="form-control hud-input" value="@sol.DecisionInstitucional" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer border-secondary">
+                            <button type="button" class="btn btn-hud-outline btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-hud-primary btn-sm">Guardar Evaluación</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL INCORPORAR ASPIRANTE -->
+        <div class="modal fade" id="modalIncorporar_@sol.Id" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content hud-modal">
+                    <form asp-action="Incorporar" method="post">
+                        <input type="hidden" name="idSolicitud" value="@sol.Id" />
+                        <div class="modal-header border-secondary">
+                            <h5 class="modal-title hud-title">Incorporación Oficial y Emisión de Código CE — @sol.Alias</h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="p-3 mb-3 rounded" style="background: rgba(34,139,34,0.12); border: 1px solid rgba(74,222,128,0.3);">
+                                <div class="hud-mono small text-success fw-bold">ALTA AUTOMÁTICA EN MEMORIA</div>
+                                <div class="small text-light mt-1">
+                                    Al confirmar, el sistema asignará el código <strong class="hud-mono">CE-@( (Model.Integrantes.Count + 1).ToString("D3") )</strong>, creará su expediente y credencial digital, lo integrará al departamento y unidad seleccionados, registrará el alta en el Archivo Institucional y abrirá la <strong>Ceremonia Digital de Incorporación</strong>.
+                                </div>
+                            </div>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label small hud-mono">RANGO INICIAL ASIGNADO</label>
+                                    <select name="rangoInicial" class="form-select hud-input">
+                                        <option value="Recluta" selected>Recluta (Escalafón de Ingreso)</option>
+                                        <option value="Operador">Operador (Especialista Certificado)</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small hud-mono">DEPARTAMENTO ASIGNADO</label>
+                                    <select name="departamentos" class="form-select hud-input">
+                                        @foreach (var d in Model.Departamentos)
+                                        {
+                                            <option value="@d.Nombre" selected="@(d.Nombre == "Operaciones")">@d.Id · @d.Nombre</option>
+                                        }
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small hud-mono">UNIDAD TÁCTICA INICIAL</label>
+                                    <select name="unidades" class="form-select hud-input">
+                                        @foreach (var u in Model.Unidades)
+                                        {
+                                            <option value="@u.Id">@u.Id · @u.Nombre</option>
+                                        }
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small hud-mono">ESPECIALIDAD PRINCIPAL</label>
+                                    <select name="especialidades" class="form-select hud-input">
+                                        <option value="Infantería">Infantería</option>
+                                        <option value="Piloto">Piloto</option>
+                                        <option value="Médico">Médico de Combate</option>
+                                        <option value="Comunicaciones">Comunicaciones (RTO)</option>
+                                        <option value="Reconocimiento">Reconocimiento</option>
+                                        <option value="Logística">Logística</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer border-secondary">
+                            <button type="button" class="btn btn-hud-outline btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-hud-primary btn-sm">Confirmar Incorporación y Abrir Ceremonia CE</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- MODAL REGISTRAR NUEVO ASPIRANTE (+18) -->
+<div class="modal fade" id="modalRegistrarAspirante" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content hud-modal">
+            <form asp-action="Registrar" method="post">
+                <div class="modal-header border-secondary">
+                    <div>
+                        <div class="hud-kicker">REGISTRO DE POSTULACIÓN INSTITUCIONAL</div>
+                        <h5 class="modal-title hud-title mb-0">Formulario de Admisión de Aspirante (+18 Obligatorio)</h5>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label small hud-mono">NOMBRE O IDENTIDAD</label>
+                            <input type="text" name="nombre" class="form-control hud-input" placeholder="Ej. Marco Valerio" required />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small hud-mono">ALIAS / CALLSIGN TÁCTICO *</label>
+                            <input type="text" name="alias" class="form-control hud-input" placeholder="Ej. Falcon_04" required />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small hud-mono">USUARIO DE DISCORD *</label>
+                            <input type="text" name="discord" class="form-control hud-input" placeholder="Ej. falcon04#2190" required />
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label small hud-mono text-warning">EDAD (MÍNIMO +18) *</label>
+                            <input type="number" name="edad" id="inputEdadAspirante" class="form-control hud-input" value="22" min="12" max="80" required />
+                            <div id="avisoEdadAspirante" class="form-text small hud-mono" style="color: var(--color-primary);">[OK] Mayoría de edad cumplida (+18)</div>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small hud-mono">HORAS MILSIM / RP</label>
+                            <input type="number" name="horasMilsim" class="form-control hud-input" value="250" min="0" />
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small hud-mono">FACCIÓN OFICIAL</label>
+                            <select name="faccion" class="form-select hud-input">
+                                <option value="Militares">Militares</option>
+                                <option value="Mercenarios">Mercenarios</option>
+                                <option value="Terroristas">Terroristas</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small hud-mono">DISPONIBILIDAD HORARIA</label>
+                            <select name="disponibilidadPA2" class="form-select hud-input">
+                                <option value="Noches">Noches</option>
+                                <option value="Fines de semana">Fines de semana</option>
+                                <option value="24/7">24/7</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label small hud-mono">PLATAFORMAS OFICIALES DISPONIBLES</label>
+                            <div class="d-flex flex-wrap gap-3 pt-1">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="plataformas" value="Arma 3" id="platArma3" checked />
+                                    <label class="form-check-label small" for="platArma3">Arma 3</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="plataformas" value="Arma Reforger" id="platReforger" />
+                                    <label class="form-check-label small" for="platReforger">Arma Reforger</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="plataformas" value="GTA V / FiveM" id="platFiveM" />
+                                    <label class="form-check-label small" for="platFiveM">GTA V / FiveM</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label small hud-mono">ESPECIALIDADES DE INTERÉS</label>
+                            <div class="d-flex flex-wrap gap-3 pt-1">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="especialidades" value="Infantería" id="espInf" checked />
+                                    <label class="form-check-label small" for="espInf">Infantería</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="especialidades" value="Piloto" id="espPil" />
+                                    <label class="form-check-label small" for="espPil">Piloto</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="especialidades" value="Médico" id="espMed" />
+                                    <label class="form-check-label small" for="espMed">Médico</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="especialidades" value="Comunicaciones" id="espCom" />
+                                    <label class="form-check-label small" for="espCom">Comunicaciones</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label small hud-mono">EXPERIENCIA EN MILSIM</label>
+                            <input type="text" name="experienciaMilsim" class="form-control hud-input" placeholder="Ej. 2 años operando con ACE3, TFAR y maniobras de escuadra" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small hud-mono">EXPERIENCIA EN ROLEPLAY Y SERVIDORES PREVIOS</label>
+                            <input type="text" name="servidoresAnteriores" class="form-control hud-input" placeholder="Ej. Task Force Altis, Servidor Distrito Táctico FiveM" />
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label small hud-mono">DESCRIPCIÓN PERSONAL Y MOTIVACIÓN</label>
+                            <textarea name="descripcionPersonal" rows="2" class="form-control hud-input" placeholder="Motivación para ingresar a Clan Exiliados..."></textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small hud-mono">ANTECEDENTES RP PREVIOS (CONTEXTO FICTICIO)</label>
+                            <textarea name="antecedentesRP" rows="2" class="form-control hud-input" placeholder="Roles militares o de contratista interpretados en servidores previos..."></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-hud-outline btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-hud-primary btn-sm">Registrar Solicitud en el Flujo</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+            var inputEdad = document.getElementById('inputEdadAspirante');
+            var aviso = document.getElementById('avisoEdadAspirante');
+            if (inputEdad && aviso) {
+                inputEdad.addEventListener('input', function () {
+                    var val = parseInt(inputEdad.value || '0', 10);
+                    if (val < 18) {
+                        aviso.className = 'form-text small hud-mono fw-bold';
+                        aviso.style.color = 'var(--color-critical)';
+                        aviso.textContent = '[RECHAZO AUTOMÁTICO] Menor de 18 años: será clasificado como RECHAZADA automáticamente.';
+                    } else {
+                        aviso.className = 'form-text small hud-mono';
+                        aviso.style.color = 'var(--color-primary)';
+                        aviso.textContent = '[OK] Mayoría de edad cumplida (' + val + ' años >= 18).';
+                    }
+                });
+            }
+        })();
+    </script>
+}

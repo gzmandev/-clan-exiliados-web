@@ -1,0 +1,157 @@
+@model ClanExiliados_Web.Services.ClanInstitutionalService
+@{
+    ViewData["Title"] = "Gestión Disciplinaria Institucional";
+    var accesoAutorizado = Model.PerfilVisualActual == "Dirección" || Model.PerfilVisualActual == "Mando";
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div>
+        <div class="hud-kicker">MÓDULO 15 · RÉGIMEN DISCIPLINARIO Y REHABILITACIÓN (DIS-###)</div>
+        <h2 class="hud-title mb-1">Gestión Disciplinaria Institucional</h2>
+        <p class="text-secondary mb-0 small">
+            Módulo administrativo de control interno restringido visualmente a los perfiles de <strong>Dirección</strong> y <strong>Mando</strong>.
+        </p>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+        <span class="hud-badge @(accesoAutorizado ? "hud-badge-success" : "hud-badge-danger")">
+            PERFIL ACTIVO: @Model.PerfilVisualActual.ToUpperInvariant()
+        </span>
+        @if (accesoAutorizado)
+        {
+            <button type="button" class="btn btn-hud-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalRegistrarDisciplina">
+                + Registrar Actuación Disciplinaria
+            </button>
+        }
+    </div>
+</div>
+
+@if (!accesoAutorizado)
+{
+    <div class="hud-panel p-5 text-center" style="border: 1px solid rgba(239, 68, 68, 0.45);">
+        <div class="hud-mono text-danger fw-bold mb-2">ACCESO VISUAL RESTRINGIDO · NIVEL DE AUTORIZACIÓN INSUFICIENTE</div>
+        <h4 class="hud-title text-light mb-2">Sección Exclusiva para Dirección y Mando</h4>
+        <p class="text-secondary mx-auto mb-4" style="max-width: 620px;">
+            Actualmente estás visualizando la plataforma con el perfil <strong>@Model.PerfilVisualActual</strong>. Conforme a la normativa de privacidad interna de Clan Exiliados, los expedientes disciplinarios (<span class="hud-mono">DIS-###</span>) sólo están habilitados para <strong>Dirección</strong> y <strong>Mando</strong>.
+        </p>
+        <form asp-controller="Home" asp-action="CambiarPerfil" method="post" class="d-inline">
+            <input type="hidden" name="perfil" value="Dirección" />
+            <input type="hidden" name="returnUrl" value="/Gobernanza/Disciplina" />
+            <button type="submit" class="btn btn-hud-primary">Cambiar a Perfil «Dirección» para Inspeccionar</button>
+        </form>
+    </div>
+}
+else
+{
+    <div class="hud-panel p-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="hud-title mb-0">Bitácora de Expedientes Disciplinarios (@Model.Disciplina.Count)</h5>
+            <span class="hud-mono small text-secondary">TIPOS: LLAMADA DE ATENCIÓN · ADVERTENCIA FORMAL · SUSPENSIÓN TEMPORAL · RESOLUCIÓN · REHABILITACIÓN</span>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table hud-table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>CÓDIGO</th>
+                        <th>EFECTIVO</th>
+                        <th>TIPO DE MEDIDA</th>
+                        <th>MOTIVO Y EVIDENCIA DESCRIPTIVA</th>
+                        <th>DURACIÓN</th>
+                        <th>RESPONSABLE / FECHA</th>
+                        <th>ESTADO</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var d in Model.Disciplina)
+                    {
+                        var badgeTipo = d.Tipo switch
+                        {
+                            "Suspensión temporal" => "hud-badge-danger",
+                            "Rehabilitación" => "hud-badge-success",
+                            _ => "hud-badge-warning"
+                        };
+                        <tr>
+                            <td class="hud-mono fw-bold text-warning">@d.Id</td>
+                            <td>
+                                <a asp-controller="Personal" asp-action="Expediente" asp-route-id="@d.IntegranteCodigoCE" class="hud-mono fw-bold text-light text-decoration-none">
+                                    @d.IntegranteCodigoCE · @d.IntegranteAlias
+                                </a>
+                            </td>
+                            <td><span class="hud-badge @badgeTipo">@d.Tipo</span></td>
+                            <td class="small">
+                                <div class="text-light fw-bold">@d.Motivo</div>
+                                <div class="text-secondary">Evidencia: @d.EvidenciaDescriptiva</div>
+                                <div class="text-info">@d.Observaciones</div>
+                            </td>
+                            <td class="hud-mono small text-light">@d.Duracion</td>
+                            <td class="small">
+                                <div class="text-light">@d.Responsable</div>
+                                <div class="hud-mono text-secondary">@d.Fecha.ToString("dd/MM/yyyy")</div>
+                            </td>
+                            <td>
+                                <span class="hud-badge @(d.Estado == "Cumplida" ? "hud-badge-success" : "hud-badge-danger")">@d.Estado</span>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- MODAL REGISTRAR MEDIDA DISCIPLINARIA -->
+    <div class="modal fade" id="modalRegistrarDisciplina" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content hud-modal">
+                <form asp-action="RegistrarDisciplina" method="post">
+                    <div class="modal-header border-secondary">
+                        <h5 class="modal-title hud-title">Registrar Actuación Disciplinaria o Rehabilitación</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label small hud-mono">EFECTIVO INVOLUCRADO</label>
+                                <select name="codigoCE" class="form-select hud-input">
+                                    @foreach (var i in Model.Integrantes)
+                                    {
+                                        <option value="@i.CodigoCE">@i.CodigoCE · @i.Alias (@i.EstadoInstitucional)</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small hud-mono">TIPO DE MEDIDA</label>
+                                <select name="tipo" class="form-select hud-input">
+                                    <option value="Llamada de atención">Llamada de atención</option>
+                                    <option value="Advertencia formal">Advertencia formal</option>
+                                    <option value="Suspensión temporal">Suspensión temporal (Cambia estado a Suspendido)</option>
+                                    <option value="Resolución administrativa">Resolución administrativa</option>
+                                    <option value="Rehabilitación">Rehabilitación (Restablece estado a Activo)</option>
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label small hud-mono">MOTIVO REGLAMENTARIO *</label>
+                                <input type="text" name="motivo" class="form-control hud-input" placeholder="Descripción del hecho o resolución..." required />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small hud-mono">EVIDENCIA DESCRIPTIVA</label>
+                                <input type="text" name="evidencia" class="form-control hud-input" value="Informe de supervisión de mando" />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small hud-mono">DURACIÓN / VIGENCIA</label>
+                                <input type="text" name="duracion" class="form-control hud-input" value="Inmediata" />
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label small hud-mono">OBSERVACIONES ADICIONALES</label>
+                                <textarea name="observaciones" rows="2" class="form-control hud-input" placeholder="Anotaciones para el expediente..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-secondary">
+                        <button type="button" class="btn btn-hud-outline btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-hud-primary btn-sm">Asentar en Archivo y Auditoría</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+}

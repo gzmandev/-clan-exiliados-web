@@ -1,0 +1,200 @@
+@model ClanExiliados_Web.Services.ClanInstitutionalService
+@{
+    ViewData["Title"] = "Centro de Operaciones Tácticas";
+    var filtroEstado = ViewData["FiltroEstado"]?.ToString() ?? "";
+    var filtroPlataforma = ViewData["FiltroPlataforma"]?.ToString() ?? "";
+
+    var ops = Model.Operaciones.AsEnumerable();
+    if (!string.IsNullOrEmpty(filtroEstado))
+        ops = ops.Where(o => o.Estado.Equals(filtroEstado, StringComparison.OrdinalIgnoreCase));
+    if (!string.IsNullOrEmpty(filtroPlataforma))
+        ops = ops.Where(o => o.Plataforma.Equals(filtroPlataforma, StringComparison.OrdinalIgnoreCase));
+
+    var listaOps = ops.ToList();
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div>
+        <div class="hud-kicker">MÓDULO 11 · PLANIFICACIÓN Y CONVOCATORIA DE DESPLIEGUES (OP-###)</div>
+        <h2 class="hud-title mb-1">Centro de Operaciones Institucionales</h2>
+        <p class="text-secondary mb-0 small">
+            Coordinación de misiones tácticas MILSIM y operativos de Roleplay en Arma 3, Arma Reforger y GTA V / FiveM.
+        </p>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+        <a asp-action="Calendario" class="btn btn-hud-outline btn-sm">Calendario Institucional</a>
+        <button type="button" class="btn btn-hud-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalCrearOperacion">
+            + Programar Nueva Operación (OP-###)
+        </button>
+    </div>
+</div>
+
+<!-- FILTROS -->
+<form method="get" asp-action="Index" class="hud-panel p-3 mb-4">
+    <div class="row g-2 align-items-end">
+        <div class="col-md-4">
+            <label class="form-label small hud-mono">ESTADO DE LA OPERACIÓN</label>
+            <select name="estado" class="form-select form-select-sm hud-input">
+                <option value="">Todos los estados</option>
+                <option value="En curso" selected="@(filtroEstado == "En curso")">En curso</option>
+                <option value="Programada" selected="@(filtroEstado == "Programada")">Programada</option>
+                <option value="Finalizada" selected="@(filtroEstado == "Finalizada")">Finalizada</option>
+                <option value="Cancelada" selected="@(filtroEstado == "Cancelada")">Cancelada</option>
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label small hud-mono">PLATAFORMA TÁCTICA</label>
+            <select name="plataforma" class="form-select form-select-sm hud-input">
+                <option value="">Todas las plataformas oficiales</option>
+                <option value="Arma 3" selected="@(filtroPlataforma == "Arma 3")">Arma 3</option>
+                <option value="Arma Reforger" selected="@(filtroPlataforma == "Arma Reforger")">Arma Reforger</option>
+                <option value="GTA V / FiveM" selected="@(filtroPlataforma == "GTA V / FiveM")">GTA V / FiveM</option>
+            </select>
+        </div>
+        <div class="col-md-4 d-flex gap-2">
+            <button type="submit" class="btn btn-hud-primary btn-sm flex-grow-1">Filtrar Despliegues</button>
+            <a asp-action="Index" class="btn btn-hud-outline btn-sm">Restablecer</a>
+        </div>
+    </div>
+</form>
+
+<!-- TARJETAS DE OPERACIONES -->
+<div class="row g-4">
+    @foreach (var op in listaOps)
+    {
+        var badgeEstado = op.Estado switch
+        {
+            "En curso" => "hud-badge-danger",
+            "Programada" => "hud-badge-info",
+            "Finalizada" => "hud-badge-success",
+            _ => "hud-badge-neutral"
+        };
+
+        <div class="col-12">
+            <div class="hud-panel p-4">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+                    <div class="d-flex flex-wrap align-items-center gap-2">
+                        <span class="hud-mono fw-bold text-success fs-5">@op.Id</span>
+                        <span class="hud-badge @badgeEstado">@op.Estado.ToUpperInvariant()</span>
+                        <span class="hud-badge hud-badge-neutral">@op.Plataforma</span>
+                        <span class="hud-badge hud-badge-warning">Depto: @op.DepartamentoResponsable</span>
+                    </div>
+                    <div class="hud-mono small text-light">
+                        FECHA: <strong class="text-warning">@op.Fecha.ToString("dd/MM/yyyy")</strong> · HORARIO: <strong class="text-info">@op.Horario</strong>
+                    </div>
+                </div>
+
+                <h4 class="hud-title text-light mb-2">@op.Nombre</h4>
+                <p class="small text-secondary mb-2">@op.Descripcion</p>
+
+                <div class="p-2 rounded mb-3 small" style="background: rgba(16,23,20,0.85); border-left: 3px solid #C5A059;">
+                    <span class="hud-mono text-warning">CONTEXTO NARRATIVO FICTICIO (MILSIM / RP):</span>
+                    <span class="text-light ms-1">@op.ContextoFicticio</span>
+                </div>
+
+                <div class="row g-3 small align-items-center">
+                    <div class="col-md-5">
+                        <div class="text-secondary">Mando Responsable: <strong class="text-light">@op.Responsable</strong></div>
+                        <div class="text-secondary mt-1">
+                            Unidades Asignadas:
+                            @foreach (var u in op.Unidades)
+                            {
+                                <span class="hud-mono text-success me-1">[@u]</span>
+                            }
+                        </div>
+                    </div>
+                    <div class="col-md-7">
+                        <div class="hud-mono text-secondary mb-1">ESTADO INDIVIDUAL DE CONVOCATORIA (@op.Convocados.Count EFECTIVOS)</div>
+                        <div class="d-flex flex-wrap gap-2">
+                            @foreach (var c in op.Convocados)
+                            {
+                                var clsConv = c.EstadoConvocatoria switch
+                                {
+                                    "Confirmado" => "hud-badge-success",
+                                    "Convocado" => "hud-badge-info",
+                                    "No participará" => "hud-badge-danger",
+                                    _ => "hud-badge-warning"
+                                };
+                                <span class="hud-badge @clsConv">
+                                    @c.CodigoCE · @c.Alias: @c.EstadoConvocatoria
+                                </span>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- MODAL CREAR OPERACIÓN -->
+<div class="modal fade" id="modalCrearOperacion" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content hud-modal">
+            <form asp-action="CrearOperacion" method="post">
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title hud-title">Programar Nueva Operación Institucional</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-8">
+                            <label class="form-label small hud-mono">NOMBRE DE LA OPERACIÓN *</label>
+                            <input type="text" name="nombre" class="form-control hud-input" placeholder="Ej. Operación Tormenta de Acero" required />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small hud-mono">PLATAFORMA OFICIAL</label>
+                            <select name="plataforma" class="form-select hud-input">
+                                <option value="Arma 3">Arma 3</option>
+                                <option value="Arma Reforger">Arma Reforger</option>
+                                <option value="GTA V / FiveM">GTA V / FiveM</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small hud-mono">FECHA DE DESPLIEGUE</label>
+                            <input type="date" name="fecha" class="form-control hud-input" value="@DateTime.Today.AddDays(3).ToString("yyyy-MM-dd")" />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small hud-mono">FRANJA HORARIA</label>
+                            <input type="text" name="horario" class="form-control hud-input" value="21:00 - 23:00" />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small hud-mono">DEPARTAMENTO RESPONSABLE</label>
+                            <select name="departamento" class="form-select hud-input">
+                                @foreach (var d in Model.Departamentos)
+                                {
+                                    <option value="@d.Nombre">@d.Nombre</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small hud-mono">OFICIAL RESPONSABLE</label>
+                            <input type="text" name="responsable" class="form-control hud-input" value="CE-001 · Paquito (Capitán)" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small hud-mono">UNIDAD CONVOCADA PRINCIPAL</label>
+                            <select name="unidades" class="form-select hud-input">
+                                @foreach (var u in Model.Unidades)
+                                {
+                                    <option value="@u.Id">@u.Id · @u.Nombre</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small hud-mono">DESCRIPCIÓN TÁCTICA Y OBJETIVOS</label>
+                            <textarea name="descripcion" rows="2" class="form-control hud-input" placeholder="Objetivos operativos del despliegue..."></textarea>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small hud-mono">CONTEXTO NARRATIVO FICTICIO (MILSIM / RP)</label>
+                            <textarea name="contexto" rows="2" class="form-control hud-input" placeholder="Ambientación ficticia de la misión..."></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-hud-outline btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-hud-primary btn-sm">Registrar y Sincronizar con Calendario</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

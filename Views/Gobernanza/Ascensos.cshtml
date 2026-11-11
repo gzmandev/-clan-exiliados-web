@@ -1,0 +1,290 @@
+@model ClanExiliados_Web.Services.ClanInstitutionalService
+@{
+    ViewData["Title"] = "Ascensos, Reconocimientos e Insignias Administrativas";
+    var esAutoridadMando = Model.PerfilVisualActual == "Dirección" || Model.PerfilVisualActual == "Mando";
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div>
+        <div class="hud-kicker">MÓDULO 14 · CARRERA MILSIM, CONDECORACIONES E INSIGNIAS</div>
+        <h2 class="hud-title mb-1">Ascensos, Reconocimientos e Insignias Administrativas</h2>
+        <p class="text-secondary mb-0 small">
+            Al aprobar un ascenso en memoria se actualizan automáticamente el rango del efectivo, su credencial CE, el Organigrama, el Archivo Institucional y el Registro de Auditoría.
+        </p>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+        <button type="button" class="btn btn-hud-outline btn-sm" data-bs-toggle="modal" data-bs-target="#modalOtorgarReconocimiento">
+            + Otorgar Reconocimiento (REC-###)
+        </button>
+        <button type="button" class="btn btn-hud-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalProponerAscenso">
+            + Proponer Ascenso (ASC-###)
+        </button>
+    </div>
+</div>
+
+<!-- 1. FLUJO DE ASCENSOS (ASC-001..) -->
+<div class="hud-panel p-4 mb-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
+        <div>
+            <h4 class="hud-title mb-0">1. Propuestas y Resoluciones de Ascenso (@Model.Ascensos.Count)</h4>
+            <div class="small text-secondary">Flujo institucional: Propuesta → Revisión de Expediente → Decisión Administrativa (Aprobada / Rechazada).</div>
+        </div>
+        <span class="hud-badge hud-badge-warning">
+            @Model.Ascensos.Count(a => a.Estado == "Pendiente") PENDIENTE(S) DE FIRMA
+        </span>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table hud-table align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>EFECTIVO</th>
+                    <th>TRANSICIÓN DE RANGO</th>
+                    <th>PROPONENTE Y FECHA</th>
+                    <th>JUSTIFICACIÓN Y EVALUACIONES</th>
+                    <th>ESTADO / AUTORIDAD</th>
+                    <th class="text-end">DECISIÓN</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var a in Model.Ascensos)
+                {
+                    var badgeAsc = a.Estado switch
+                    {
+                        "Aprobada" => "hud-badge-success",
+                        "Rechazada" => "hud-badge-danger",
+                        _ => "hud-badge-warning"
+                    };
+                    <tr>
+                        <td class="hud-mono fw-bold text-success">@a.Id</td>
+                        <td>
+                            <a asp-controller="Personal" asp-action="Expediente" asp-route-id="@a.IntegranteCodigoCE" class="hud-mono fw-bold text-light text-decoration-none">
+                                @a.IntegranteCodigoCE · @a.IntegranteAlias
+                            </a>
+                        </td>
+                        <td>
+                            <span class="hud-badge hud-badge-neutral">@a.RangoActual</span>
+                            <span class="text-warning mx-1">→</span>
+                            <span class="hud-badge hud-badge-warning">@a.RangoPropuesto</span>
+                        </td>
+                        <td class="small">
+                            <div class="text-light">@a.Proponente</div>
+                            <div class="hud-mono text-secondary">@a.Fecha.ToString("dd/MM/yyyy")</div>
+                        </td>
+                        <td class="small">
+                            <div class="text-light">@a.Justificacion</div>
+                            <div class="text-info hud-mono mt-1">@a.Evaluaciones</div>
+                        </td>
+                        <td>
+                            <span class="hud-badge @badgeAsc">@a.Estado.ToUpperInvariant()</span>
+                            <div class="small text-secondary mt-1">@a.AutoridadAprobadora</div>
+                        </td>
+                        <td class="text-end">
+                            @if (a.Estado == "Pendiente")
+                            {
+                                if (esAutoridadMando)
+                                {
+                                    <div class="d-flex justify-content-end gap-1">
+                                        <form asp-action="ResolverAscenso" method="post" class="d-inline">
+                                            <input type="hidden" name="idAscenso" value="@a.Id" />
+                                            <input type="hidden" name="aprobar" value="true" />
+                                            <input type="hidden" name="motivo" value="Ratificación de ascenso por mérito y evaluación aprobada" />
+                                            <button type="submit" class="btn btn-hud-primary btn-sm py-1 px-2">Aprobar</button>
+                                        </form>
+                                        <form asp-action="ResolverAscenso" method="post" class="d-inline">
+                                            <input type="hidden" name="idAscenso" value="@a.Id" />
+                                            <input type="hidden" name="aprobar" value="false" />
+                                            <input type="hidden" name="motivo" value="Postergado para siguiente ciclo de evaluación" />
+                                            <button type="submit" class="btn btn-hud-outline btn-sm py-1 px-2 text-danger">Rechazar</button>
+                                        </form>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <span class="small hud-mono text-secondary">Requiere perfil Dirección/Mando</span>
+                                }
+                            }
+                            else
+                            {
+                                <span class="hud-mono small text-secondary">Cerrado</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- 2. RECONOCIMIENTOS Y CONDECORACIONES (REC-001..) -->
+<div class="hud-panel p-4 mb-4">
+    <h4 class="hud-title mb-1">2. Reconocimientos y Condecoraciones Institucionales (@Model.Reconocimientos.Count)</h4>
+    <p class="small text-secondary mb-3">
+        Categorías: Mérito institucional, Servicio y permanencia, Liderazgo, Desempeño y formación, y Distinción especial.
+    </p>
+
+    <div class="row g-3">
+        @foreach (var rec in Model.Reconocimientos)
+        {
+            <div class="col-xl-4 col-md-6">
+                <div class="p-3 rounded h-100" style="background: rgba(16,23,20,0.9); border: 1px solid rgba(197,160,89,0.35);">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="hud-mono fw-bold text-warning">@rec.Id</span>
+                        <span class="hud-badge hud-badge-success">@rec.Estado</span>
+                    </div>
+                    <div class="hud-badge hud-badge-info mb-2">@rec.Categoria</div>
+                    <h5 class="text-light fw-bold mb-1">@rec.Nombre</h5>
+                    <p class="small text-secondary mb-2">@rec.Descripcion</p>
+                    <div class="small text-light mb-2"><strong>Motivo:</strong> @rec.Motivo</div>
+                    <div class="pt-2 border-top border-secondary d-flex justify-content-between align-items-center small">
+                        <a asp-controller="Personal" asp-action="Expediente" asp-route-id="@rec.BeneficiarioCodigoCE" class="hud-mono text-success fw-bold text-decoration-none">
+                            @rec.BeneficiarioCodigoCE · @rec.BeneficiarioAlias
+                        </a>
+                        <span class="hud-mono text-secondary">@rec.Fecha.ToString("dd/MM/yyyy")</span>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- 3. INSIGNIAS Y ESPECIALIDADES ADMINISTRATIVAS (INS-001..) -->
+<div class="hud-panel p-4">
+    <h4 class="hud-title mb-1">3. Registro de Insignias y Especialidades Administrativas (@Model.InsigniasAdmin.Count)</h4>
+    <p class="small text-secondary mb-3">
+        Asignadas por resolución administrativa de Dirección o Mando (la aprobación de un entrenamiento no genera insignias automáticas).
+    </p>
+    <div class="table-responsive">
+        <table class="table hud-table table-sm align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>CÓDIGO</th>
+                    <th>INSIGNIA / ESPECIALIDAD</th>
+                    <th>TIPO</th>
+                    <th>BENEFICIARIO</th>
+                    <th>JUSTIFICACIÓN ADMINISTRATIVA</th>
+                    <th>AUTORIDAD</th>
+                    <th>FECHA</th>
+                    <th>ESTADO</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var ins in Model.InsigniasAdmin)
+                {
+                    <tr>
+                        <td class="hud-mono text-warning fw-bold">@ins.Id</td>
+                        <td class="fw-bold text-light">@ins.Nombre</td>
+                        <td><span class="hud-badge hud-badge-neutral">@ins.Tipo</span></td>
+                        <td class="hud-mono text-success">@ins.IntegranteCodigoCE · @ins.IntegranteAlias</td>
+                        <td class="small text-secondary">@ins.Justificacion</td>
+                        <td class="small text-light">@ins.AutoridadAsignadora</td>
+                        <td class="hud-mono small">@ins.Fecha.ToString("dd/MM/yyyy")</td>
+                        <td><span class="hud-badge hud-badge-success">@ins.Estado</span></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- MODAL PROPONER ASCENSO -->
+<div class="modal fade" id="modalProponerAscenso" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content hud-modal">
+            <form asp-action="ProponerAscenso" method="post">
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title hud-title">Registrar Propuesta de Ascenso</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label small hud-mono">INTEGRANTE PROPUESTO</label>
+                        <select name="codigoCE" class="form-select hud-input">
+                            @foreach (var i in Model.Integrantes)
+                            {
+                                <option value="@i.CodigoCE">@i.CodigoCE · @i.Alias (Actual: @i.Rango)</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small hud-mono">RANGO PROPUESTO</label>
+                        <select name="rangoPropuesto" class="form-select hud-input">
+                            @foreach (var r in Model.Rangos.OrderBy(x => x.Orden))
+                            {
+                                <option value="@r.Nombre">@r.Nombre</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small hud-mono">OFICIAL PROPONENTE</label>
+                        <input type="text" name="proponente" class="form-control hud-input" value="CE-001 · Paquito (Capitán)" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small hud-mono">JUSTIFICACIÓN DEL ASCENSO *</label>
+                        <textarea name="justificacion" rows="2" class="form-control hud-input" placeholder="Méritos operativos y liderazgo..." required></textarea>
+                    </div>
+                    <div class="mb-0">
+                        <label class="form-label small hud-mono">EVALUACIONES DE RESPALDO</label>
+                        <input type="text" name="evaluaciones" class="form-control hud-input" value="Asistencia 100% y entrenamientos aprobados" />
+                    </div>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-hud-outline btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-hud-primary btn-sm">Registrar Propuesta</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL OTORGAR RECONOCIMIENTO -->
+<div class="modal fade" id="modalOtorgarReconocimiento" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content hud-modal">
+            <form asp-action="OtorgarReconocimiento" method="post">
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title hud-title">Otorgar Reconocimiento Institucional</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label small hud-mono">EFECTIVO CONDECORADO</label>
+                        <select name="codigoCE" class="form-select hud-input">
+                            @foreach (var i in Model.Integrantes)
+                            {
+                                <option value="@i.CodigoCE">@i.CodigoCE · @i.Alias (@i.Rango)</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small hud-mono">NOMBRE DE LA CONDECORACIÓN *</label>
+                        <input type="text" name="nombre" class="form-control hud-input" placeholder="Ej. Medalla al Valor en Despliegue Conjunto" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small hud-mono">CATEGORÍA OFICIAL</label>
+                        <select name="categoria" class="form-select hud-input">
+                            <option value="Mérito institucional">Mérito institucional</option>
+                            <option value="Servicio y permanencia">Servicio y permanencia</option>
+                            <option value="Liderazgo">Liderazgo</option>
+                            <option value="Desempeño y formación">Desempeño y formación</option>
+                            <option value="Distinción especial">Distinción especial</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small hud-mono">MOTIVO DEL OTORGAMIENTO *</label>
+                        <input type="text" name="motivo" class="form-control hud-input" placeholder="Actuación destacada en campaña..." required />
+                    </div>
+                    <div class="mb-0">
+                        <label class="form-label small hud-mono">DESCRIPCIÓN REGLAMENTARIA</label>
+                        <textarea name="descripcion" rows="2" class="form-control hud-input" placeholder="Detalle institucional de la distinción..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-hud-outline btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-hud-primary btn-sm">Otorgar Condecoración</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

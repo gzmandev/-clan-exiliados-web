@@ -1,0 +1,80 @@
+@model ClanExiliados_Web.Models.IntegranteCE
+@{
+    ViewData["Title"] = $"Ceremonia Digital de Incorporación — {Model.CodigoCE}";
+}
+
+<div class="row justify-content-center">
+    <div class="col-xl-9">
+        <div class="hud-panel p-4 p-lg-5 text-center position-relative overflow-hidden" style="border: 1px solid var(--border-dark);">
+            <div class="hud-kicker mb-2">PROTOCOLO OFICIAL DE ALTA · CLAN EXILIADOS</div>
+            <h1 class="hud-title display-6 mb-2">CEREMONIA DIGITAL DE INCORPORACIÓN</h1>
+            <p class="text-secondary mx-auto mb-4" style="max-width: 680px;">
+                Por disposición del Estado Mayor y el Departamento de Reclutamiento, se acredita la incorporación oficial del nuevo efectivo al escalafón institucional de simulación táctica MILSIM y Roleplay.
+            </p>
+
+            <!-- ESCUDO Y MONOGRAMA OFICIAL CE -->
+            <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3"
+                 style="width: 108px; height: 108px; background: radial-gradient(circle, rgba(57,255,106,0.15) 0%, var(--bg-card) 75%); border: 2px solid var(--color-primary);">
+                <svg width="60" height="60" viewBox="0 0 64 64" fill="none" aria-label="Escudo Clan Exiliados">
+                    <path d="M32 4L8 14V30C8 46.5 18.2 56.8 32 60C45.8 56.8 56 46.5 56 30V14L32 4Z" stroke="#39FF6A" stroke-width="2.5" fill="rgba(31,107,53,0.3)"/>
+                    <path d="M32 12L15 19V30C15 41.8 22.3 49.6 32 52.4C41.7 49.6 49 41.8 49 30V19L32 12Z" stroke="#FFB000" stroke-width="1.5"/>
+                    <text x="32" y="37" text-anchor="middle" fill="#E2EAE3" font-family="Rajdhani, sans-serif" font-weight="700" font-size="18">CE</text>
+                </svg>
+            </div>
+
+            <div class="mb-4">
+                <div class="hud-mono text-secondary small">IDENTIFICADOR INSTITUCIONAL ASIGNADO</div>
+                <div class="display-5 fw-bold hud-mono" style="color: var(--color-primary);">@Model.CodigoCE</div>
+                <div class="fs-4 fw-bold mt-1" style="color: var(--text-primary); font-family: var(--font-display);">@Model.Alias <span class="text-secondary fw-normal">(@Model.Nombre)</span></div>
+            </div>
+
+            <!-- RESUMEN DE ASIGNACIÓN INSTITUCIONAL -->
+            <div class="row g-3 text-start mb-4">
+                <div class="col-md-4">
+                    <div class="p-3 rounded h-100" style="background: var(--bg-elevated); border: 1px solid var(--border-dark);">
+                        <div class="hud-mono small text-secondary">RANGO INICIAL</div>
+                        <div class="fs-5 fw-bold mt-1" style="color: var(--color-alert); font-family: var(--font-display);">@Model.Rango</div>
+                        <div class="small text-secondary mt-1">Facción oficial: <strong style="color: var(--text-primary);">@Model.Faccion</strong></div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="p-3 rounded h-100" style="background: var(--bg-elevated); border: 1px solid var(--border-dark);">
+                        <div class="hud-mono small text-secondary">DEPARTAMENTO Y UNIDAD</div>
+                        <div class="fs-6 fw-bold mt-1" style="color: var(--text-primary); font-family: var(--font-display);">@string.Join(", ", Model.Departamentos)</div>
+                        <div class="small hud-mono mt-1" style="color: var(--color-primary);">Unidad: @string.Join(", ", Model.Unidades)</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="p-3 rounded h-100" style="background: var(--bg-elevated); border: 1px solid var(--border-dark);">
+                        <div class="hud-mono small text-secondary">FECHA DE INCORPORACIÓN</div>
+                        <div class="fs-5 fw-bold hud-mono mt-1" style="color: var(--text-primary);">@Model.FechaIngreso.ToString("dd/MM/yyyy")</div>
+                        <div class="small text-secondary mt-1">Especialidad: <strong style="color: var(--text-primary);">@string.Join(", ", Model.Especialidades)</strong></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MENSAJE DE BIENVENIDA -->
+            <div class="p-3 rounded text-start mb-4" style="background: var(--bg-elevated); border-left: 4px solid var(--color-primary); border: 1px solid var(--border-dark);">
+                <div class="hud-mono small fw-bold mb-1" style="color: var(--color-primary);">MENSAJE OFICIAL DE BIENVENIDA</div>
+                <p class="mb-0 small" style="color: var(--text-primary);">
+                    «Bienvenido a <strong>Clan Exiliados</strong>, operador <strong>@Model.Alias</strong>. A partir de este momento portas el identificador oficial <strong>@Model.CodigoCE</strong>. Tu expediente personal, tu credencial digital y tu asignación en el Organigrama Institucional han quedado activos. Actúa siempre bajo nuestro lema: <em>Disciplina, Coordinación Táctica y Honor Operativo</em>.»
+                </p>
+            </div>
+
+            <div class="d-flex flex-wrap justify-content-center gap-3">
+                <a asp-controller="Personal" asp-action="Credencial" asp-route-id="@Model.CodigoCE" class="btn btn-hud-primary d-inline-flex align-items-center">
+                    <i data-lucide="credit-card" class="me-2"></i>
+                    <span>Abrir e Imprimir Credencial Digital (@Model.CodigoCE)</span>
+                </a>
+                <a asp-controller="Personal" asp-action="Expediente" asp-route-id="@Model.CodigoCE" class="btn btn-hud-outline d-inline-flex align-items-center">
+                    <i data-lucide="folder" class="me-2"></i>
+                    <span>Consultar Expediente Completo</span>
+                </a>
+                <a asp-controller="Reclutamiento" asp-action="Index" class="btn btn-hud-outline d-inline-flex align-items-center">
+                    <i data-lucide="arrow-left" class="me-2"></i>
+                    <span>Volver a Reclutamiento</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

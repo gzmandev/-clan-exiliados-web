@@ -1,0 +1,141 @@
+@{
+    ViewData["Title"] = "Nueva Solicitud";
+}
+
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-3 gap-2">
+    <div>
+        <h2 class="hud-title mb-1">Formulario de Admisión</h2>
+        <p class="text-secondary mb-0 small">Complete los campos requeridos para registrar una nueva solicitud de ingreso a Clan Exiliados.</p>
+    </div>
+</div>
+
+<div class="hud-panel p-4" style="max-width: 820px;">
+    <div class="d-flex align-items-center justify-content-between pb-3 mb-3 border-bottom" style="border-color: var(--color-border) !important;">
+        <div class="d-flex align-items-center gap-2">
+            <i data-lucide="file-plus" class="text-primary icon-md"></i>
+            <span class="hud-mono text-uppercase text-secondary" style="font-size: 0.85rem; letter-spacing: 1px;">REGISTRO DE ASPIRANTE</span>
+        </div>
+        <span class="hud-badge hud-badge-success">SISTEMA ACTIVO</span>
+    </div>
+
+    <form id="frmNuevaSolicitud" onsubmit="return false;">
+        <div class="row g-3">
+            <!-- 1. Nombre del jugador -->
+            <div class="col-md-6">
+                <label for="txtNombreJugador" class="form-label fw-semibold" style="color: var(--color-text-main);">Nombre del Jugador :</label>
+                <input type="text" id="txtNombreJugador" class="form-control hud-input"
+                       placeholder="Ingresa tu nombre de jugador" maxlength="60" />
+            </div>
+
+            <!-- 2. Rango deseado -->
+            <div class="col-md-6">
+                <label for="cboRango" class="form-label fw-semibold" style="color: var(--color-text-main);">Rango Deseado :</label>
+                <select id="cboRango" class="form-select hud-input">
+                    <option value="Recluta">Recluta</option>
+                    <option value="Soldado">Soldado</option>
+                    <option value="Cabo">Cabo</option>
+                    <option value="Sargento">Sargento</option>
+                    <option value="Teniente">Teniente</option>
+                    <option value="Capitán">Capitán</option>
+                </select>
+            </div>
+
+            <!-- 3. Especialidad militar -->
+            <div class="col-md-6">
+                <label for="cboEspecialidad" class="form-label fw-semibold" style="color: var(--color-text-main);">Especialidad Militar :</label>
+                <select id="cboEspecialidad" class="form-select hud-input">
+                    <option value="Infantería">Infantería</option>
+                    <option value="Piloto">Piloto</option>
+                    <option value="Médico">Médico</option>
+                    <option value="Comunicaciones">Comunicaciones</option>
+                    <option value="Logística">Logística</option>
+                </select>
+            </div>
+
+            <!-- 4. Experiencia MILSIM (horas) -->
+            <div class="col-md-6">
+                <label for="nudHoras" class="form-label fw-semibold" style="color: var(--color-text-main);">Experiencia MILSIM (horas):</label>
+                <input type="number" id="nudHoras" class="form-control hud-input hud-mono"
+                       value="100" min="0" max="20000" />
+            </div>
+
+            <!-- 5. Selección de facción: Militares, Mercenarios, Terroristas -->
+            <div class="col-12">
+                <fieldset class="p-3 rounded" style="background: var(--color-bg-elevated); border: 1px solid var(--color-border);">
+                    <legend class="float-none w-auto px-2 fs-6 fw-semibold mb-0" style="color: var(--color-primary); font-family: var(--font-display); letter-spacing: 0.5px;">
+                        Selecciona tu Facción
+                    </legend>
+                    <div class="d-flex flex-wrap gap-4 pt-2">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="rbFaccion" id="rbMilitares" value="Militares" checked />
+                            <label class="form-check-label fw-medium" for="rbMilitares">
+                                <span class="hud-badge badge-militares me-1">Militares</span>
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="rbFaccion" id="rbMercenarios" value="Mercenarios" />
+                            <label class="form-check-label fw-medium" for="rbMercenarios">
+                                <span class="hud-badge badge-mercenarios me-1">Mercenarios</span>
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="rbFaccion" id="rbTerroristas" value="Terroristas" />
+                            <label class="form-check-label fw-medium" for="rbTerroristas">
+                                <span class="hud-badge badge-terroristas me-1">Terroristas</span>
+                            </label>
+                        </div>
+                    </div>
+                </fieldset>
+            </div>
+
+            <!-- 6. Discord -->
+            <div class="col-md-6">
+                <label for="txtDiscord" class="form-label fw-semibold" style="color: var(--color-text-main);">Discord (Usuario#1234):</label>
+                <input type="text" id="txtDiscord" class="form-control hud-input hud-mono"
+                       placeholder="Usuario#1234" maxlength="40" />
+            </div>
+
+            <!-- 7. Disponibilidad -->
+            <div class="col-md-6">
+                <label for="cboDisponibilidad" class="form-label fw-semibold" style="color: var(--color-text-main);">Disponibilidad:</label>
+                <select id="cboDisponibilidad" class="form-select hud-input">
+                    <option value="24/7">24/7</option>
+                    <option value="Noches">Noches</option>
+                    <option value="Fines de semana">Fines de semana</option>
+                </select>
+            </div>
+
+            <!-- 8. Fecha de solicitud -->
+            <div class="col-md-6">
+                <label for="dtpFechaSolicitud" class="form-label fw-semibold" style="color: var(--color-text-main);">Fecha de solicitud:</label>
+                <input type="date" id="dtpFechaSolicitud" class="form-control hud-input hud-mono" value="@DateTime.Today.ToString("yyyy-MM-dd")" />
+            </div>
+
+            <!-- 9. Términos y condiciones -->
+            <div class="col-12 mt-3">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="chkTerminos" checked />
+                    <label class="form-check-label fw-semibold" for="chkTerminos" style="color: var(--color-text-main);">
+                        Acepto los términos y condiciones de Clan Exiliados.
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Botones: Guardar solicitud (Grabar), Limpiar y Cancelar -->
+        <div class="d-flex flex-wrap gap-2 mt-4 pt-3" style="border-top: 1px solid var(--color-border);">
+            <button class="btn btn-hud-primary px-4 d-inline-flex align-items-center" type="button" onclick="mostrarAvisoGuardado();">
+                <i data-lucide="save" class="me-2 icon-sm"></i>
+                <span>Guardar solicitud (Grabar)</span>
+            </button>
+            <button class="btn btn-tactical-danger px-4 d-inline-flex align-items-center" type="button" onclick="limpiarFormularioSolicitud();">
+                <i data-lucide="rotate-ccw" class="me-2 icon-sm"></i>
+                <span>Limpiar</span>
+            </button>
+            <a class="btn btn-hud-outline px-4 ms-sm-auto d-inline-flex align-items-center" asp-controller="Solicitudes" asp-action="Index">
+                <i data-lucide="x" class="me-2 icon-sm"></i>
+                <span>Cancelar</span>
+            </a>
+        </div>
+    </form>
+</div>

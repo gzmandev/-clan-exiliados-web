@@ -1,0 +1,166 @@
+@model ClanExiliados_Web.Services.ClanInstitutionalService
+@{
+    ViewData["Title"] = "Entrenamientos y Evaluaciones";
+    var filtroCategoria = ViewData["FiltroCategoria"]?.ToString() ?? "";
+    var entrenamientos = Model.Entrenamientos.AsEnumerable();
+    if (!string.IsNullOrEmpty(filtroCategoria))
+        entrenamientos = entrenamientos.Where(e => e.Categoria.Equals(filtroCategoria, StringComparison.OrdinalIgnoreCase));
+    var lista = entrenamientos.ToList();
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div>
+        <div class="hud-kicker">MÓDULO 13 · INSTRUCCIÓN TÁCTICA Y EVALUACIÓN DE 5 EJES (ENT-###)</div>
+        <h2 class="hud-title mb-1">Entrenamientos y Evaluaciones Institucionales</h2>
+        <p class="text-secondary mb-0 small">
+            Categorías oficiales: MILSIM, Coordinación, Comunicación, Roleplay y Formación interna. La aprobación certifica la sesión pero no otorga insignias automáticas (éstas requieren asignación administrativa).
+        </p>
+    </div>
+    <button type="button" class="btn btn-hud-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalCrearEntrenamiento">
+        + Programar Entrenamiento (ENT-###)
+    </button>
+</div>
+
+<!-- FILTRO DE CATEGORÍAS -->
+<div class="hud-panel p-3 mb-4 d-flex flex-wrap gap-2 align-items-center">
+    <span class="hud-mono small text-secondary me-2">CATEGORÍA:</span>
+    <a asp-action="Entrenamientos" asp-route-categoria="" class="btn btn-sm @(string.IsNullOrEmpty(filtroCategoria) ? "btn-hud-primary" : "btn-hud-outline")">Todas</a>
+    @foreach (var cat in new[] { "MILSIM", "Coordinación", "Comunicación", "Roleplay", "Formación interna" })
+    {
+        <a asp-action="Entrenamientos" asp-route-categoria="@cat" class="btn btn-sm @(filtroCategoria == cat ? "btn-hud-primary" : "btn-hud-outline")">@cat</a>
+    }
+</div>
+
+<div class="d-flex flex-column gap-4">
+    @foreach (var ent in lista)
+    {
+        <div class="hud-panel p-4">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="hud-mono fw-bold text-warning fs-5">@ent.Id</span>
+                    <span class="hud-badge hud-badge-info">@ent.Categoria.ToUpperInvariant()</span>
+                    <span class="hud-badge hud-badge-neutral">@ent.Plataforma</span>
+                    <span class="hud-badge @(ent.Estado == "Finalizado" ? "hud-badge-success" : "hud-badge-warning")">@ent.Estado</span>
+                </div>
+                <div class="hud-mono small text-light">
+                    @ent.Fecha.ToString("dd/MM/yyyy") · <span class="text-info">@ent.Horario</span> · Instructor: <strong class="text-warning">@ent.Instructor</strong>
+                </div>
+            </div>
+
+            <h4 class="hud-title text-light mb-1">@ent.Nombre</h4>
+            <p class="small text-secondary mb-3">@ent.Descripcion · Unidades convocadas: <strong class="hud-mono text-success">@string.Join(", ", ent.Unidades)</strong></p>
+
+            <!-- TABLA DE ASISTENCIA Y EVALUACIÓN EN 5 EJES -->
+            <div class="table-responsive">
+                <table class="table hud-table table-sm align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>OPERADOR</th>
+                            <th>ASISTENCIA</th>
+                            <th>RENDIMIENTO</th>
+                            <th>COMUNICACIÓN</th>
+                            <th>COORDINACIÓN</th>
+                            <th>TRABAJO EQUIPO</th>
+                            <th>OBJETIVOS</th>
+                            <th>OBSERVACIONES</th>
+                            <th>RESULTADO</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var ev in ent.Convocados)
+                        {
+                            <tr>
+                                <td class="hud-mono fw-bold text-light">@ev.CodigoCE · @ev.Alias</td>
+                                <td>
+                                    <span class="hud-badge @(ev.Asistencia == "Asistió" ? "hud-badge-success" : ev.Asistencia == "Ausente" ? "hud-badge-danger" : "hud-badge-warning")">
+                                        @ev.Asistencia
+                                    </span>
+                                </td>
+                                <td class="hud-mono">@ev.RendimientoGeneral%</td>
+                                <td class="hud-mono">@ev.Comunicacion%</td>
+                                <td class="hud-mono">@ev.Coordinacion%</td>
+                                <td class="hud-mono">@ev.TrabajoEnEquipo%</td>
+                                <td class="hud-mono">@ev.CumplimientoObjetivos%</td>
+                                <td class="small text-secondary">@ev.Observaciones</td>
+                                <td>
+                                    <span class="hud-badge @(ev.Resultado == "Aprobado" ? "hud-badge-success" : ev.Resultado == "No aprobado" ? "hud-badge-danger" : "hud-badge-info")">
+                                        @ev.Resultado
+                                    </span>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- MODAL CREAR ENTRENAMIENTO -->
+<div class="modal fade" id="modalCrearEntrenamiento" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content hud-modal">
+            <form asp-action="CrearEntrenamiento" method="post">
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title hud-title">Programar Nuevo Entrenamiento Institucional</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-8">
+                            <label class="form-label small hud-mono">NOMBRE DE LA SESIÓN *</label>
+                            <input type="text" name="nombre" class="form-control hud-input" placeholder="Ej. Curso Avanzado de Navegación Nocturna" required />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small hud-mono">CATEGORÍA</label>
+                            <select name="categoria" class="form-select hud-input">
+                                <option value="MILSIM">MILSIM</option>
+                                <option value="Coordinación">Coordinación</option>
+                                <option value="Comunicación">Comunicación</option>
+                                <option value="Roleplay">Roleplay</option>
+                                <option value="Formación interna">Formación interna</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small hud-mono">PLATAFORMA</label>
+                            <select name="plataforma" class="form-select hud-input">
+                                <option value="Arma 3">Arma 3</option>
+                                <option value="Arma Reforger">Arma Reforger</option>
+                                <option value="GTA V / FiveM">GTA V / FiveM</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small hud-mono">FECHA</label>
+                            <input type="date" name="fecha" class="form-control hud-input" value="@DateTime.Today.AddDays(2).ToString("yyyy-MM-dd")" />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small hud-mono">HORARIO</label>
+                            <input type="text" name="horario" class="form-control hud-input" value="19:00 - 20:30" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small hud-mono">INSTRUCTOR A CARGO</label>
+                            <input type="text" name="instructor" class="form-control hud-input" value="CE-002 · Wolf_Alpha (Sargento)" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small hud-mono">UNIDAD CONVOCADA</label>
+                            <select name="unidades" class="form-select hud-input">
+                                @foreach (var u in Model.Unidades)
+                                {
+                                    <option value="@u.Id">@u.Id · @u.Nombre</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small hud-mono">TEMARIO Y OBJETIVOS DE EVALUACIÓN</label>
+                            <textarea name="descripcion" rows="2" class="form-control hud-input" placeholder="Descripción de módulos prácticos..."></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-hud-outline btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-hud-primary btn-sm">Programar Sesión</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

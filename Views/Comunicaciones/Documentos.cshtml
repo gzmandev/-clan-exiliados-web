@@ -1,0 +1,75 @@
+@model ClanExiliados_Web.Services.ClanInstitutionalService
+@{
+    ViewData["Title"] = "Centro Documental Institucional";
+    var filtroCategoria = ViewData["FiltroCategoria"]?.ToString() ?? "";
+    var docs = Model.Documentos.AsEnumerable();
+    if (!string.IsNullOrEmpty(filtroCategoria))
+        docs = docs.Where(d => d.Categoria.Equals(filtroCategoria, StringComparison.OrdinalIgnoreCase));
+    var listaDocs = docs.ToList();
+    var categorias = new[] { "Reglamentos", "Rangos", "Departamentos", "Unidades", "Reclutamiento", "Incorporación", "Entrenamientos", "Archivo histórico" };
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div>
+        <div class="hud-kicker">MÓDULO 18 · BIBLIOTECA NORMATIVA Y DOCTRINA (DOC-001 A DOC-008)</div>
+        <h2 class="hud-title mb-1">Centro Documental de Clan Exiliados</h2>
+        <p class="text-secondary mb-0 small">
+            Repositorio oficial de estatutos, manuales de rangos, doctrina de departamentos y unidades, protocolos de reclutamiento (+18) y archivo histórico.
+        </p>
+    </div>
+</div>
+
+<!-- FILTRO DE LAS 8 CATEGORÍAS -->
+<div class="hud-panel p-3 mb-4 d-flex flex-wrap gap-2 align-items-center">
+    <span class="hud-mono small text-secondary me-2">CATEGORÍA DOCUMENTAL:</span>
+    <a asp-action="Documentos" asp-route-categoria="" class="btn btn-sm @(string.IsNullOrEmpty(filtroCategoria) ? "btn-hud-primary" : "btn-hud-outline")">
+        Todas (@Model.Documentos.Count)
+    </a>
+    @foreach (var cat in categorias)
+    {
+        <a asp-action="Documentos" asp-route-categoria="@cat" class="btn btn-sm @(filtroCategoria == cat ? "btn-hud-primary" : "btn-hud-outline")">
+            @cat
+        </a>
+    }
+</div>
+
+<div class="row g-4">
+    @foreach (var doc in listaDocs)
+    {
+        <div class="col-xl-6">
+            <div class="hud-panel p-4 h-100 d-flex flex-column justify-content-between">
+                <div>
+                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="hud-mono fw-bold text-success">@doc.Id</span>
+                            <span class="hud-badge hud-badge-info">@doc.Categoria.ToUpperInvariant()</span>
+                            <span class="hud-badge hud-badge-neutral">Acceso: @doc.NivelAcceso</span>
+                        </div>
+                        <span class="hud-badge hud-badge-success">@doc.Estado</span>
+                    </div>
+
+                    <h5 class="hud-title text-light mb-2">@doc.Titulo</h5>
+                    <p class="small text-secondary mb-3">@doc.Descripcion</p>
+
+                    <div class="p-3 rounded mb-3 small" style="background: rgba(16,23,20,0.88); border-left: 3px solid #4ADE80;">
+                        <div class="hud-mono text-success mb-1">EXTRACTO NORMATIVO OFICIAL:</div>
+                        <div class="text-light">@doc.VistaPreviaContenido</div>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="d-flex flex-wrap gap-1 mb-2">
+                        @foreach (var tag in doc.Etiquetas)
+                        {
+                            <span class="hud-badge hud-badge-neutral">#@tag</span>
+                        }
+                    </div>
+                    <div class="pt-2 border-top border-secondary d-flex flex-wrap justify-content-between align-items-center small text-secondary">
+                        <span>Autor: <strong class="text-light">@doc.Autor</strong> · Depto: <strong class="text-warning">@doc.Responsable</strong></span>
+                        <span class="hud-mono">Actualizado: @doc.FechaActualizacion.ToString("dd/MM/yyyy")</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>

@@ -1,0 +1,53 @@
+@model ClanExiliados_Web.Services.ClanInstitutionalService
+@{
+    ViewData["Title"] = "Activity Feed Institucional";
+    var filtroTipo = ViewData["FiltroTipo"]?.ToString() ?? "";
+    var eventos = Model.ActivityFeed.AsEnumerable();
+    if (!string.IsNullOrEmpty(filtroTipo))
+        eventos = eventos.Where(e => e.Tipo.Equals(filtroTipo, StringComparison.OrdinalIgnoreCase));
+    var lista = eventos.ToList();
+    var tipos = new[] { "Comunicado", "Reclutamiento", "Integración", "Ascenso", "Reconocimiento", "Operación", "Entrenamiento", "Administración" };
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div>
+        <div class="hud-kicker">MÓDULO 23 · CRONOLOGÍA DE EVENTOS EN TIEMPO REAL (ACT-###)</div>
+        <h2 class="hud-title mb-1">Activity Feed Institucional</h2>
+        <p class="text-secondary mb-0 small">
+            Flujo cronológico vivo que refleja las altas de reclutamiento, ceremonias CE, ascensos aprobados, operaciones, entrenamientos y comunicados.
+        </p>
+    </div>
+</div>
+
+<!-- FILTRO DE TIPOS -->
+<div class="hud-panel p-3 mb-4 d-flex flex-wrap gap-2 align-items-center">
+    <span class="hud-mono small text-secondary me-2">TIPO DE EVENTO:</span>
+    <a asp-action="Actividad" asp-route-tipo="" class="btn btn-sm @(string.IsNullOrEmpty(filtroTipo) ? "btn-hud-primary" : "btn-hud-outline")">
+        Todos (@Model.ActivityFeed.Count)
+    </a>
+    @foreach (var t in tipos)
+    {
+        <a asp-action="Actividad" asp-route-tipo="@t" class="btn btn-sm @(filtroTipo == t ? "btn-hud-primary" : "btn-hud-outline")">@t</a>
+    }
+</div>
+
+<div class="hud-panel p-4">
+    <div class="d-flex flex-column gap-3">
+        @foreach (var ev in lista)
+        {
+            <div class="p-3 rounded d-flex flex-wrap justify-content-between align-items-center gap-3"
+                 style="background: rgba(16,23,20,0.88); border: 1px solid rgba(255,255,255,0.08);">
+                <div>
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <span class="hud-mono fw-bold text-success">@ev.Id</span>
+                        <span class="hud-badge hud-badge-info">@ev.Tipo.ToUpperInvariant()</span>
+                        <span class="hud-mono small text-secondary">@ev.FechaHora.ToString("dd/MM/yyyy HH:mm")</span>
+                    </div>
+                    <div class="text-light fw-bold">@ev.Descripcion</div>
+                    <div class="small text-secondary mt-1">Responsable: <strong class="text-warning">@ev.Responsable</strong></div>
+                </div>
+                <a href="@ev.EnlaceRegistro" class="btn btn-hud-outline btn-sm">Ir al Módulo →</a>
+            </div>
+        }
+    </div>
+</div>
